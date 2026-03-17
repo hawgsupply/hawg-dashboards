@@ -9,14 +9,56 @@
   .links { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
   a { background: #1a1a1a; border: 1px solid #333; color: #eee; text-decoration: none; padding: 20px 32px; border-radius: 10px; font-size: 16px; transition: border-color 0.2s; }
   a:hover { border-color: #ff6a00; color: #ff6a00; }
+
+  #gate { position: fixed; inset: 0; background: #111; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+  #gate h2 { color: #ff6a00; font-size: 22px; letter-spacing: 2px; text-transform: uppercase; }
+  #gate .skull { font-size: 60px; }
+  #gate input { background: #1a1a1a; border: 1px solid #333; color: #eee; font-size: 18px; padding: 12px 20px; border-radius: 8px; text-align: center; letter-spacing: 4px; width: 280px; }
+  #gate input:focus { outline: none; border-color: #ff6a00; }
+  #gate button { background: #ff6a00; color: #000; font-weight: 700; font-size: 14px; padding: 10px 28px; border: none; border-radius: 8px; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; }
+  #gate button:hover { background: #ff8833; }
+  #gate .err { color: #ff4444; font-size: 13px; display: none; }
+  #gate .hint { color: #444; font-size: 12px; }
 </style>
 </head>
 <body>
-  <h1>🐗 Hawg Supply Dashboards</h1>
-  <div class="links">
-    <a href="shop.html">⚙️ Shop Dashboard</a>
-    <a href="roadmap.html">📈 Growth Roadmap</a>
-    <a href="ads.html">🐗 Meta Ads Dashboard</a>
-  </div>
+
+<div id="gate">
+  <div class="skull">💀</div>
+  <h2>Choppers Only</h2>
+  <input type="password" id="gateInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') checkPass()" autofocus>
+  <button onclick="checkPass()">Enter</button>
+  <div class="err" id="gateErr">Wrong password, poser.</div>
+  <div class="hint">Hawg Supply internal use only</div>
+</div>
+
+<h1>🐗 Hawg Supply Dashboards</h1>
+<div class="links">
+  <a href="shop.html">⚙️ Shop Dashboard</a>
+  <a href="roadmap.html">📈 Growth Roadmap</a>
+</div>
+
+<script>
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function checkPass() {
+  const val = document.getElementById('gateInput').value;
+  const hash = await hashStr(val);
+  const correct = await hashStr('choppers');
+  if (hash === correct) {
+    document.getElementById('gate').style.display = 'none';
+    sessionStorage.setItem('hawg_auth', '1');
+  } else {
+    document.getElementById('gateErr').style.display = 'block';
+    document.getElementById('gateInput').value = '';
+    document.getElementById('gateInput').focus();
+  }
+}
+if (sessionStorage.getItem('hawg_auth') === '1') {
+  document.getElementById('gate').style.display = 'none';
+}
+</script>
 </body>
 </html>
