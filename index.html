@@ -9,7 +9,6 @@
   .links { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
   a { background: #1a1a1a; border: 1px solid #333; color: #eee; text-decoration: none; padding: 20px 32px; border-radius: 10px; font-size: 16px; transition: border-color 0.2s; }
   a:hover { border-color: #ff6a00; color: #ff6a00; }
-
   #gate { position: fixed; inset: 0; background: #111; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
   #gate h2 { color: #ff6a00; font-size: 22px; letter-spacing: 2px; text-transform: uppercase; }
   #gate .skull { font-size: 60px; }
@@ -50,14 +49,14 @@ async function checkPass() {
   const correct = await hashStr('choppers');
   if (hash === correct) {
     document.getElementById('gate').style.display = 'none';
-    sessionStorage.setItem('hawg_auth', '1');
+    localStorage.setItem('hawg_auth', '1');
   } else {
     document.getElementById('gateErr').style.display = 'block';
     document.getElementById('gateInput').value = '';
     document.getElementById('gateInput').focus();
   }
 }
-if (sessionStorage.getItem('hawg_auth') === '1') {
+if (localStorage.getItem('hawg_auth') === '1') {
   document.getElementById('gate').style.display = 'none';
 }
 </script>

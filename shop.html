@@ -201,7 +201,7 @@ async function checkPass() {
   const correct = await hashStr('choppers');
   if (hash === correct) {
     document.getElementById('gate').style.display = 'none';
-    sessionStorage.setItem('hawg_auth', '1');
+    localStorage.setItem('hawg_auth', '1');
   } else {
     document.getElementById('gateErr').style.display = 'block';
     document.getElementById('gateInput').value = '';
@@ -210,7 +210,7 @@ async function checkPass() {
 }
 
 // Auto-unlock if already authed this session
-if (sessionStorage.getItem('hawg_auth') === '1') {
+if (localStorage.getItem('hawg_auth') === '1') {
   document.getElementById('gate').style.display = 'none';
 }
 </script>

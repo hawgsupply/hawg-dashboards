@@ -284,14 +284,14 @@ async function checkPass() {
   const correct = '04547a8acce56c3c52a5d48ce4df2df1e88c4bae5e4b67a233708a4d0ccfaa37';
   if (hash === correct) {
     document.getElementById('gate').style.display = 'none';
-    sessionStorage.setItem('hawg_auth', '1');
+    localStorage.setItem('hawg_auth', '1');
   } else {
     document.getElementById('gateErr').style.display = 'block';
     document.getElementById('gateInput').value = '';
     document.getElementById('gateInput').focus();
   }
 }
-if (sessionStorage.getItem('hawg_auth') === '1') {
+if (localStorage.getItem('hawg_auth') === '1') {
   document.getElementById('gate').style.display = 'none';
 }
 </script>
