@@ -7,6 +7,17 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+  /* Password gate */
+  #gate { position: fixed; inset: 0; background: #111; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+  #gate h2 { color: #ff6a00; font-size: 22px; letter-spacing: 2px; text-transform: uppercase; }
+  #gate .skull { font-size: 60px; }
+  #gate input { background: #1a1a1a; border: 1px solid #333; color: #eee; font-size: 18px; padding: 12px 20px; border-radius: 8px; text-align: center; letter-spacing: 4px; width: 280px; }
+  #gate input:focus { outline: none; border-color: #ff6a00; }
+  #gate button { background: #ff6a00; color: #000; font-weight: 700; font-size: 14px; padding: 10px 28px; border: none; border-radius: 8px; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; }
+  #gate button:hover { background: #ff8833; }
+  #gate .err { color: #ff4444; font-size: 13px; display: none; }
+  #gate .hint { color: #444; font-size: 12px; }
   h1 { color: #ff6a00; font-size: 26px; margin-bottom: 4px; }
   .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
   .sync-status { font-size: 11px; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-left: 10px; vertical-align: middle; }
@@ -164,6 +175,45 @@
     </div>
   </div>
 </div>
+
+<!-- Password Gate -->
+<div id="gate">
+  <div class="skull">💀</div>
+  <h2>Choppers Only</h2>
+  <input type="password" id="gateInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') checkPass()" autofocus>
+  <button onclick="checkPass()">Enter</button>
+  <div class="err" id="gateErr">Wrong password, poser.</div>
+  <div class="hint">Hawg Supply internal use only</div>
+</div>
+
+<script>
+const PASS_HASH = '7a9e3f2b1d4c8e6a0f5b2d9c3a7e1f4b'; // md5 of "choppers"
+
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPass() {
+  const val = document.getElementById('gateInput').value;
+  const hash = await hashStr(val);
+  // Check against sha256 of "choppers"
+  const correct = await hashStr('choppers');
+  if (hash === correct) {
+    document.getElementById('gate').style.display = 'none';
+    sessionStorage.setItem('hawg_auth', '1');
+  } else {
+    document.getElementById('gateErr').style.display = 'block';
+    document.getElementById('gateInput').value = '';
+    document.getElementById('gateInput').focus();
+  }
+}
+
+// Auto-unlock if already authed this session
+if (sessionStorage.getItem('hawg_auth') === '1') {
+  document.getElementById('gate').style.display = 'none';
+}
+</script>
 
 <!-- Firebase -->
 <script type="module">
