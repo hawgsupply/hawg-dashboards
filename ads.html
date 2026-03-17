@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketingHawg 🐗 — Hawg Supply Ads Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f1117;
+    color: #e2e8f0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1d2e 0%, #0f1117 100%);
+    border-bottom: 1px solid #1e2340;
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 { font-size: 1.4rem; font-weight: 700; color: #fff; }
+  .header h1 span { color: #f97316; }
+  .header-right { display: flex; align-items: center; gap: 14px; }
+  .last-updated { font-size: 0.75rem; color: #64748b; }
+  .refresh-btn {
+    background: #1e2340;
+    border: 1px solid #2d3561;
+    color: #94a3b8;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: #2d3561; color: #fff; }
+  .refresh-btn.loading { opacity: 0.6; cursor: not-allowed; }
+  .main { padding: 24px 28px; max-width: 1400px; }
+
+  /* Range selector */
+  .range-bar { display: flex; gap: 8px; margin-bottom: 24px; }
+  .range-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid #1e2340;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .range-btn.active { background: #f97316; border-color: #f97316; color: #fff; }
+  .range-btn:hover:not(.active) { border-color: #64748b; color: #e2e8f0; }
+
+  /* Stat cards */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .card {
+    background: #1a1d2e;
+    border: 1px solid #1e2340;
+    border-radius: 14px;
+    padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: #2d3561; }
+  .card-label { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .card-value { font-size: 1.9rem; font-weight: 700; color: #fff; line-height: 1; }
+  .card-value.green { color: #22c55e; }
+  .card-value.orange { color: #f97316; }
+  .card-value.red { color: #ef4444; }
+  .card-value.yellow { color: #eab308; }
+  .card-sub { font-size: 0.72rem; color: #475569; margin-top: 6px; }
+  .card-delta { font-size: 0.75rem; margin-top: 4px; }
+  .card-delta.up { color: #22c55e; }
+  .card-delta.down { color: #ef4444; }
+
+  /* Section heading */
+  .section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #475569;
+    margin-bottom: 14px;
+    margin-top: 8px;
+  }
+
+  /* Campaign table */
+  .table-wrap {
+    background: #1a1d2e;
+    border: 1px solid #1e2340;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #141726; }
+  th {
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #475569;
+    font-weight: 600;
+    border-bottom: 1px solid #1e2340;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { color: #94a3b8; }
+  th.sort-asc::after { content: ' ▲'; }
+  th.sort-desc::after { content: ' ▼'; }
+  tbody tr { border-bottom: 1px solid #141726; transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #1e2340; }
+  td { padding: 13px 16px; font-size: 0.85rem; }
+  .campaign-name { font-weight: 500; color: #e2e8f0; max-width: 260px; }
+  .campaign-name small { display: block; font-size: 0.7rem; color: #475569; margin-top: 2px; font-weight: 400; }
+  .status-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .status-active { background: #22c55e; box-shadow: 0 0 6px #22c55e88; }
+  .status-paused { background: #475569; }
+  .roas-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .roas-great { background: #14532d33; color: #22c55e; border: 1px solid #22c55e44; }
+  .roas-good { background: #713f1233; color: #f97316; border: 1px solid #f97316aa; }
+  .roas-warn { background: #78350f33; color: #eab308; border: 1px solid #eab30844; }
+  .roas-bad { background: #45070733; color: #ef4444; border: 1px solid #ef444444; }
+  .roas-na { background: #1e234088; color: #475569; border: 1px solid #2d356144; }
+  .num { color: #94a3b8; }
+  .num-pos { color: #e2e8f0; font-weight: 500; }
+  .alert-banner {
+    background: #1e1606;
+    border: 1px solid #854d0e;
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .alert-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .alert-text { font-size: 0.84rem; color: #fde68a; line-height: 1.5; }
+  .alert-text strong { color: #fbbf24; }
+  .insights-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media (max-width: 768px) { .insights-grid { grid-template-columns: 1fr; } .cards { grid-template-columns: repeat(2,1fr); } }
+  .insight-card {
+    background: #1a1d2e;
+    border: 1px solid #1e2340;
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .insight-card h3 { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+  .funnel-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .funnel-label { font-size: 0.82rem; color: #94a3b8; }
+  .funnel-val { font-size: 0.9rem; font-weight: 600; color: #e2e8f0; }
+  .funnel-bar-wrap { height: 4px; background: #1e2340; border-radius: 2px; margin-bottom: 14px; }
+  .funnel-bar { height: 4px; border-radius: 2px; background: linear-gradient(90deg, #f97316, #fb923c); }
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #2d3561; border-top-color: #f97316; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .skeleton { background: linear-gradient(90deg, #1e2340 25%, #2d3561 50%, #1e2340 75%); background-size: 200% 100%; animation: shimmer 1.2s infinite; border-radius: 6px; }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .skel-val { height: 36px; width: 100px; }
+  .skel-sub { height: 14px; width: 80px; margin-top: 6px; }
+  .error-msg { color: #ef4444; font-size: 0.82rem; padding: 12px; }
+  .objective-badge {
+    font-size: 0.68rem;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #1e2340;
+    color: #64748b;
+    border: 1px solid #2d3561;
+  }
+  .compare-row { display: flex; gap: 24px; }
+  .compare-block { flex: 1; }
+  .compare-label { font-size: 0.72rem; color: #475569; margin-bottom: 4px; }
+  .compare-val { font-size: 1.1rem; font-weight: 700; }
+  .divider { border: none; border-top: 1px solid #1e2340; margin: 20px 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🐗 <span>Hawg Supply</span> — Ads Dashboard</h1>
+  <div class="header-right">
+    <span class="last-updated" id="last-updated">—</span>
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="range-bar">
+    <button class="range-btn active" data-range="last_7d" onclick="setRange('last_7d',this)">7 Days</button>
+    <button class="range-btn" data-range="last_14d" onclick="setRange('last_14d',this)">14 Days</button>
+    <button class="range-btn" data-range="last_30d" onclick="setRange('last_30d',this)">30 Days</button>
+    <button class="range-btn" data-range="last_90d" onclick="setRange('last_90d',this)">90 Days</button>
+  </div>
+
+  <div id="alert-area"></div>
+
+  <div class="cards" id="overview-cards">
+    <div class="card"><div class="card-label">Spend</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+    <div class="card"><div class="card-label">Revenue</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+    <div class="card"><div class="card-label">ROAS</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+    <div class="card"><div class="card-label">Purchases</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+    <div class="card"><div class="card-label">Cost / Purchase</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+    <div class="card"><div class="card-label">CTR</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+    <div class="card"><div class="card-label">CPM</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+    <div class="card"><div class="card-label">Impressions</div><div class="skeleton skel-val"></div><div class="skeleton skel-sub" style="margin-top:8px"></div></div>
+  </div>
+
+  <div class="insights-grid">
+    <div class="insight-card" id="funnel-card">
+      <h3>Funnel Performance</h3>
+      <div id="funnel-content"><div class="skeleton" style="height:120px;border-radius:8px"></div></div>
+    </div>
+    <div class="insight-card" id="compare-card">
+      <h3>Period Comparison</h3>
+      <div id="compare-content"><div class="skeleton" style="height:120px;border-radius:8px"></div></div>
+    </div>
+  </div>
+
+  <div class="section-title">Campaign Performance</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortTable('name')">Campaign</th>
+          <th onclick="sortTable('status')">Status</th>
+          <th onclick="sortTable('spend')">Spend</th>
+          <th onclick="sortTable('revenue')">Revenue</th>
+          <th onclick="sortTable('roas')">ROAS</th>
+          <th onclick="sortTable('purchases')">Purchases</th>
+          <th onclick="sortTable('cpp')">CPP</th>
+          <th onclick="sortTable('ctr')">CTR</th>
+          <th onclick="sortTable('cpm')">CPM</th>
+          <th onclick="sortTable('impressions')">Impr.</th>
+        </tr>
+      </thead>
+      <tbody id="campaign-table-body">
+        <tr><td colspan="10"><div class="skeleton" style="height:40px;margin:8px;border-radius:8px"></div></td></tr>
+        <tr><td colspan="10"><div class="skeleton" style="height:40px;margin:8px;border-radius:8px"></div></td></tr>
+        <tr><td colspan="10"><div class="skeleton" style="height:40px;margin:8px;border-radius:8px"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const TOKEN = 'EAAM9PROeMRsBQZCswY7PJsEEYJ6J4cH9xOyZAnL1henRuimjihUZAglNSuGVZA8waeskuKnaHNXGg1kk92LS8rzkDg5qlMcmJtEANpCEkj93AO9I6cc3BFlc6fOoyC5dEHwJkJ2vZAz0vTDu6r9b1kpnlLR13DtpbaoOSoCVMG5BGSiyrLiZBYoM9sdSHcdi9ousvbLWYNhOBymKZCvaLWSym446neA8Bx1Q1w7QZBHT';
+const ACCOUNT = 'act_2551595811812873';
+const BASE = 'https://graph.facebook.com/v19.0';
+
+let currentRange = 'last_7d';
+let campaignData = [];
+let sortKey = 'spend';
+let sortDir = -1;
+
+function setRange(range, el) {
+  currentRange = range;
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadAll();
+}
+
+function fmt$(v) { return '$' + parseFloat(v).toLocaleString('en-US', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmt$k(v) { const n = parseFloat(v); return n >= 1000 ? '$' + (n/1000).toFixed(1) + 'k' : fmt$(v); }
+function fmtN(v) { return parseFloat(v).toLocaleString('en-US', {maximumFractionDigits:0}); }
+function fmtPct(v) { return parseFloat(v).toFixed(2) + '%'; }
+function fmtROAS(v) { return parseFloat(v).toFixed(2) + 'x'; }
+
+function roasClass(r) {
+  if (!r || r === '—') return 'roas-na';
+  const v = parseFloat(r);
+  if (v >= 5) return 'roas-great';
+  if (v >= 3) return 'roas-good';
+  if (v >= 1.5) return 'roas-warn';
+  return 'roas-bad';
+}
+
+function roasColor(r) {
+  if (!r) return '';
+  const v = parseFloat(r);
+  if (v >= 5) return 'green';
+  if (v >= 3) return 'orange';
+  if (v >= 1.5) return 'yellow';
+  return 'red';
+}
+
+function getVal(actions, type) {
+  if (!actions) return 0;
+  const a = actions.find(x => x.action_type === type);
+  return a ? parseFloat(a.value) : 0;
+}
+
+async function apiFetch(url) {
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function loadOverview() {
+  const fields = 'spend,impressions,clicks,ctr,cpm,purchase_roas,actions,action_values';
+  const url = `${BASE}/${ACCOUNT}/insights?fields=${fields}&date_preset=${currentRange}&level=account&access_token=${TOKEN}`;
+  const data = await apiFetch(url);
+  if (data.error) throw new Error(data.error.message);
+  const d = data.data[0] || {};
+
+  const spend = parseFloat(d.spend || 0);
+  const roas = d.purchase_roas ? parseFloat(d.purchase_roas[0]?.value || 0) : 0;
+  const revenue = spend * roas;
+  const purchases = getVal(d.actions, 'purchase');
+  const cpp = purchases > 0 ? spend / purchases : 0;
+  const ctr = parseFloat(d.ctr || 0);
+  const cpm = parseFloat(d.cpm || 0);
+  const impressions = parseFloat(d.impressions || 0);
+  const atc = getVal(d.actions, 'add_to_cart');
+  const checkout = getVal(d.actions, 'initiate_checkout');
+  const clicks = parseFloat(d.clicks || 0);
+
+  // Render overview cards
+  const rc = roasColor(roas);
+  document.getElementById('overview-cards').innerHTML = `
+    <div class="card"><div class="card-label">Spend</div><div class="card-value">${fmt$k(spend)}</div><div class="card-sub">${currentRange.replace('last_','').replace('d',' days')}</div></div>
+    <div class="card"><div class="card-label">Revenue</div><div class="card-value orange">${fmt$k(revenue)}</div><div class="card-sub">attributed</div></div>
+    <div class="card"><div class="card-label">ROAS</div><div class="card-value ${rc}">${fmtROAS(roas)}</div><div class="card-sub">${roas >= 3 ? '✅ healthy' : roas >= 1.5 ? '⚠️ marginal' : '❌ needs work'}</div></div>
+    <div class="card"><div class="card-label">Purchases</div><div class="card-value">${fmtN(purchases)}</div><div class="card-sub">conversions</div></div>
+    <div class="card"><div class="card-label">Cost / Purchase</div><div class="card-value ${cpp < 40 ? 'green' : cpp < 60 ? 'yellow' : 'red'}">${cpp > 0 ? fmt$(cpp) : '—'}</div><div class="card-sub">${cpp < 40 ? 'efficient' : cpp < 60 ? 'watch it' : 'too high'}</div></div>
+    <div class="card"><div class="card-label">CTR</div><div class="card-value ${ctr >= 2 ? 'green' : ctr >= 1 ? 'yellow' : 'red'}">${fmtPct(ctr)}</div><div class="card-sub">${ctr >= 2 ? 'strong' : 'low'}</div></div>
+    <div class="card"><div class="card-label">CPM</div><div class="card-value">${fmt$(cpm)}</div><div class="card-sub">cost per 1k impr.</div></div>
+    <div class="card"><div class="card-label">Impressions</div><div class="card-value">${impressions >= 1000000 ? (impressions/1000000).toFixed(1)+'M' : impressions >= 1000 ? (impressions/1000).toFixed(0)+'k' : fmtN(impressions)}</div><div class="card-sub">reach</div></div>
+  `;
+
+  // Funnel
+  const lpv = getVal(d.actions, 'landing_page_view');
+  const steps = [
+    { label: 'Clicks', val: clicks, pct: 100 },
+    { label: 'Landing Page Views', val: lpv, pct: clicks > 0 ? (lpv/clicks)*100 : 0 },
+    { label: 'View Content', val: getVal(d.actions, 'view_content'), pct: clicks > 0 ? (getVal(d.actions,'view_content')/clicks)*100 : 0 },
+    { label: 'Add to Cart', val: atc, pct: clicks > 0 ? (atc/clicks)*100 : 0 },
+    { label: 'Initiate Checkout', val: checkout, pct: clicks > 0 ? (checkout/clicks)*100 : 0 },
+    { label: 'Purchases', val: purchases, pct: clicks > 0 ? (purchases/clicks)*100 : 0 },
+  ];
+  document.getElementById('funnel-content').innerHTML = steps.map(s => `
+    <div class="funnel-row"><span class="funnel-label">${s.label}</span><span class="funnel-val">${fmtN(s.val)}</span></div>
+    <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.min(100,s.pct)}%"></div></div>
+  `).join('');
+
+  return { spend, roas, revenue, purchases, cpp };
+}
+
+async function loadCompare(currentData) {
+  // Load previous period for comparison
+  const prevPreset = currentRange === 'last_7d' ? 'last_14d' : currentRange === 'last_14d' ? 'last_28d' : 'last_90d';
+  try {
+    const url = `${BASE}/${ACCOUNT}/insights?fields=spend,purchase_roas,actions&date_preset=${prevPreset}&level=account&access_token=${TOKEN}`;
+    const data = await apiFetch(url);
+    const d = data.data[0] || {};
+    const prevSpend = parseFloat(d.spend || 0);
+    const prevRoas = d.purchase_roas ? parseFloat(d.purchase_roas[0]?.value || 0) : 0;
+    const prevRevenue = prevSpend * prevRoas;
+    const prevPurchases = getVal(d.actions, 'purchase');
+
+    // For last_30d vs last_14d prev, we need to subtract - just show as-is with label
+    const periodLabel = currentRange.replace('last_','').replace('d',' days');
+    const prevLabel = prevPreset.replace('last_','').replace('d',' days');
+
+    const spendDelta = currentData.spend - prevSpend/2;
+    const roasDelta = currentData.roas - prevRoas;
+
+    document.getElementById('compare-content').innerHTML = `
+      <div class="compare-row" style="margin-bottom:16px">
+        <div class="compare-block">
+          <div class="compare-label">This ${periodLabel}</div>
+          <div class="compare-val orange">${fmt$k(currentData.spend)}</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px">spent</div>
+        </div>
+        <div class="compare-block">
+          <div class="compare-label">ROAS</div>
+          <div class="compare-val ${roasColor(currentData.roas)}">${fmtROAS(currentData.roas)}</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px">return</div>
+        </div>
+        <div class="compare-block">
+          <div class="compare-label">Purchases</div>
+          <div class="compare-val">${fmtN(currentData.purchases)}</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px">orders</div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div style="font-size:0.72rem;color:#475569;margin-bottom:10px">Prior ${prevLabel} (full period)</div>
+      <div class="compare-row">
+        <div class="compare-block">
+          <div class="compare-label">Spend</div>
+          <div class="compare-val" style="font-size:0.95rem;color:#64748b">${fmt$k(prevSpend)}</div>
+        </div>
+        <div class="compare-block">
+          <div class="compare-label">ROAS</div>
+          <div class="compare-val ${roasColor(prevRoas)}" style="font-size:0.95rem">${fmtROAS(prevRoas)}</div>
+        </div>
+        <div class="compare-block">
+          <div class="compare-label">Purchases</div>
+          <div class="compare-val" style="font-size:0.95rem;color:#64748b">${fmtN(prevPurchases)}</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:0.78rem">
+        ROAS trend: <span style="color:${roasDelta >= 0 ? '#22c55e' : '#ef4444'};font-weight:600">${roasDelta >= 0 ? '▲' : '▼'} ${Math.abs(roasDelta).toFixed(2)}x</span> vs prior period
+      </div>
+    `;
+  } catch(e) {
+    document.getElementById('compare-content').innerHTML = '<div style="color:#475569;font-size:0.82rem">Comparison unavailable</div>';
+  }
+}
+
+async function loadCampaigns() {
+  const fields = 'campaign_name,campaign_id,spend,impressions,clicks,ctr,cpm,purchase_roas,actions,action_values,objective';
+  const url = `${BASE}/${ACCOUNT}/insights?fields=${fields}&date_preset=${currentRange}&level=campaign&limit=50&access_token=${TOKEN}`;
+
+  // Also get campaign statuses
+  const statusUrl = `${BASE}/${ACCOUNT}/campaigns?fields=name,status,id&access_token=${TOKEN}`;
+  const [insightData, statusData] = await Promise.all([apiFetch(url), apiFetch(statusUrl)]);
+
+  const statusMap = {};
+  (statusData.data || []).forEach(c => statusMap[c.id] = c.status);
+
+  campaignData = (insightData.data || []).map(c => {
+    const spend = parseFloat(c.spend || 0);
+    const roas = c.purchase_roas ? parseFloat(c.purchase_roas[0]?.value || 0) : 0;
+    const revenue = spend * roas;
+    const purchases = getVal(c.actions, 'purchase');
+    const cpp = purchases > 0 ? spend / purchases : 0;
+    return {
+      name: c.campaign_name,
+      id: c.campaign_id,
+      status: statusMap[c.campaign_id] || 'UNKNOWN',
+      objective: c.objective || '',
+      spend,
+      revenue,
+      roas,
+      purchases,
+      cpp,
+      ctr: parseFloat(c.ctr || 0),
+      cpm: parseFloat(c.cpm || 0),
+      impressions: parseFloat(c.impressions || 0),
+      clicks: parseFloat(c.clicks || 0),
+    };
+  });
+
+  renderCampaignTable();
+  buildAlerts();
+}
+
+function renderCampaignTable() {
+  const sorted = [...campaignData].sort((a, b) => {
+    let av = a[sortKey], bv = b[sortKey];
+    if (typeof av === 'string') av = av.toLowerCase(), bv = bv.toLowerCase();
+    return sortDir * (av > bv ? 1 : av < bv ? -1 : 0);
+  });
+
+  // Update sort headers
+  document.querySelectorAll('th').forEach(th => {
+    th.classList.remove('sort-asc','sort-desc');
+    if (th.getAttribute('onclick') === `sortTable('${sortKey}')`) {
+      th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+    }
+  });
+
+  const objLabel = o => o.replace('OUTCOME_','').replace('_',' ').toLowerCase();
+
+  document.getElementById('campaign-table-body').innerHTML = sorted.map(c => `
+    <tr>
+      <td class="campaign-name">
+        ${c.name}
+        <small><span class="objective-badge">${objLabel(c.objective)}</span></small>
+      </td>
+      <td><span class="status-dot ${c.status === 'ACTIVE' ? 'status-active' : 'status-paused'}"></span>${c.status === 'ACTIVE' ? 'Active' : 'Paused'}</td>
+      <td class="num-pos">${c.spend > 0 ? fmt$(c.spend) : '<span class="num">—</span>'}</td>
+      <td class="num-pos">${c.revenue > 0 ? fmt$(c.revenue) : '<span class="num">—</span>'}</td>
+      <td><span class="roas-pill ${roasClass(c.roas)}">${c.roas > 0 ? fmtROAS(c.roas) : '—'}</span></td>
+      <td class="num-pos">${c.purchases > 0 ? fmtN(c.purchases) : '<span class="num">—</span>'}</td>
+      <td class="${c.cpp > 0 ? (c.cpp < 40 ? 'card-value green' : c.cpp < 60 ? 'card-value yellow' : 'card-value red') : 'num'}" style="font-size:0.85rem">${c.cpp > 0 ? fmt$(c.cpp) : '—'}</td>
+      <td class="num">${c.ctr > 0 ? fmtPct(c.ctr) : '—'}</td>
+      <td class="num">${c.cpm > 0 ? fmt$(c.cpm) : '—'}</td>
+      <td class="num">${c.impressions > 0 ? (c.impressions >= 1000 ? (c.impressions/1000).toFixed(0)+'k' : fmtN(c.impressions)) : '—'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="10" style="text-align:center;color:#475569;padding:24px">No campaign data for this period</td></tr>';
+}
+
+function sortTable(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = -1; }
+  renderCampaignTable();
+}
+
+function buildAlerts() {
+  const alerts = [];
+  const paused = campaignData.filter(c => c.status !== 'ACTIVE' && c.roas >= 5 && c.spend > 0);
+  paused.forEach(c => alerts.push(`<strong>🔥 ${c.name}</strong> is paused with a ${fmtROAS(c.roas)} ROAS — consider reactivating.`));
+
+  const active = campaignData.filter(c => c.status === 'ACTIVE');
+  active.forEach(c => {
+    if (c.roas > 0 && c.roas < 1.5) alerts.push(`<strong>❌ ${c.name}</strong> is active but ROAS is only ${fmtROAS(c.roas)} — losing money.`);
+  });
+
+  const alertArea = document.getElementById('alert-area');
+  if (alerts.length > 0) {
+    alertArea.innerHTML = alerts.map(a => `
+      <div class="alert-banner">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-text">${a}</div>
+      </div>
+    `).join('');
+  } else {
+    alertArea.innerHTML = '';
+  }
+}
+
+async function loadAll() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('loading');
+  btn.textContent = '↻ Loading...';
+
+  try {
+    const [currentData] = await Promise.all([
+      loadOverview(),
+      loadCampaigns(),
+    ]);
+    await loadCompare(currentData);
+    document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    document.getElementById('overview-cards').innerHTML = `<div class="error-msg">❌ API error: ${e.message}</div>`;
+  }
+
+  btn.classList.remove('loading');
+  btn.textContent = '↻ Refresh';
+}
+
+loadAll();
+// Auto-refresh every 5 minutes
+setInterval(loadAll, 5 * 60 * 1000);
+</script>
+</body>
+</html>
