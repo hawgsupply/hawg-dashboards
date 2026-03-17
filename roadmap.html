@@ -281,7 +281,7 @@ async function hashStr(str) {
 async function checkPass() {
   const val = document.getElementById('gateInput').value;
   const hash = await hashStr(val);
-  const correct = await hashStr('choppers');
+  const correct = '04547a8acce56c3c52a5d48ce4df2df1e88c4bae5e4b67a233708a4d0ccfaa37';
   if (hash === correct) {
     document.getElementById('gate').style.display = 'none';
     sessionStorage.setItem('hawg_auth', '1');
