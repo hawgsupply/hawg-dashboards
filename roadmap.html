@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hawg Supply — Growth Roadmap</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+  h1 { color: #ff6a00; font-size: 28px; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 13px; margin-bottom: 30px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+  .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 20px; }
+  .card h2 { font-size: 14px; color: #ff6a00; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .stat { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #222; }
+  .stat:last-child { border-bottom: none; }
+  .stat-label { color: #aaa; font-size: 13px; }
+  .stat-value { font-weight: 700; font-size: 14px; }
+  .red { color: #ff4444; }
+  .green { color: #44cc77; }
+  .orange { color: #ff9900; }
+  .white { color: #fff; }
+
+  .debt-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #222; align-items: center; }
+  .debt-item:last-child { border-bottom: none; }
+  .debt-label { font-size: 13px; color: #ccc; }
+  .debt-rate { font-size: 11px; color: #888; margin-top: 2px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .badge-kill { background: #ff4444; color: #fff; }
+  .badge-keep { background: #333; color: #888; }
+  .badge-ok { background: #1a4a2a; color: #44cc77; }
+
+  .alloc-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; }
+  .alloc-item:last-child { border-bottom: none; }
+  .alloc-bar-wrap { width: 100%; background: #222; border-radius: 4px; height: 6px; margin-top: 6px; }
+  .alloc-bar { height: 6px; border-radius: 4px; background: #ff6a00; }
+  .alloc-left { flex: 1; }
+  .alloc-name { font-size: 13px; color: #ccc; }
+  .alloc-amount { font-size: 14px; font-weight: 700; color: #fff; margin-left: 10px; white-space: nowrap; }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .phase { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid #222; }
+  .phase:last-child { border-bottom: none; }
+  .phase-dot { width: 36px; height: 36px; border-radius: 50%; background: #ff6a00; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; color: #000; }
+  .phase-content h3 { font-size: 14px; color: #ff9900; margin-bottom: 6px; }
+  .phase-content ul { list-style: none; }
+  .phase-content ul li { font-size: 13px; color: #aaa; padding: 2px 0; }
+  .phase-content ul li::before { content: "→ "; color: #ff6a00; }
+
+  .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .product-chip { background: #222; border: 1px solid #333; border-radius: 8px; padding: 10px; text-align: center; }
+  .product-chip .icon { font-size: 22px; margin-bottom: 6px; }
+  .product-chip .name { font-size: 11px; color: #ccc; }
+  .product-chip .priority { font-size: 10px; margin-top: 4px; }
+  .p1 { border-color: #ff6a00; }
+  .p1 .priority { color: #ff6a00; }
+  .p2 { border-color: #ff9900; }
+  .p2 .priority { color: #ff9900; }
+  .p3 { border-color: #555; }
+  .p3 .priority { color: #777; }
+
+  .projection { display: flex; gap: 20px; align-items: flex-end; justify-content: center; padding: 10px 0; }
+  .proj-bar-wrap { text-align: center; }
+  .proj-bar { width: 80px; border-radius: 6px 6px 0 0; background: #333; display: flex; align-items: flex-end; justify-content: center; margin: 0 auto; transition: all 0.3s; }
+  .proj-bar.now { background: linear-gradient(180deg, #ff6a00, #cc5500); height: 130px; }
+  .proj-bar.target { background: linear-gradient(180deg, #44cc77, #228844); height: 230px; }
+  .proj-label { font-size: 12px; color: #888; margin-top: 6px; }
+  .proj-value { font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .proj-value.now { color: #ff6a00; }
+  .proj-value.target { color: #44cc77; }
+
+  .summary-box { background: #1a2a1a; border: 1px solid #2a4a2a; border-radius: 10px; padding: 20px; margin-top: 20px; }
+  .summary-box h2 { color: #44cc77; margin-bottom: 12px; font-size: 16px; }
+  .summary-box p { color: #aaa; font-size: 13px; line-height: 1.7; }
+
+  .total-row { background: #222; border-radius: 6px; padding: 10px 12px; display: flex; justify-content: space-between; margin-top: 10px; }
+  .total-row span { font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>🐗 Hawg Supply — Growth Roadmap</h1>
+<p class="subtitle">March 2026 · $10k cash + $12k incoming + $30k Shopify loan</p>
+
+<div class="grid">
+
+  <!-- Current State -->
+  <div class="card">
+    <h2>📊 Current Business (120 Days)</h2>
+    <div class="stat"><span class="stat-label">Total Revenue</span><span class="stat-value white">$53,400</span></div>
+    <div class="stat"><span class="stat-label">Total Orders</span><span class="stat-value white">542</span></div>
+    <div class="stat"><span class="stat-label">Avg Order Value</span><span class="stat-value white">$98.52</span></div>
+    <div class="stat"><span class="stat-label">Monthly Revenue</span><span class="stat-value orange">~$13,000</span></div>
+    <div class="stat"><span class="stat-label">Monthly Overhead</span><span class="stat-value red">~$10,500</span></div>
+    <div class="stat"><span class="stat-label">Meta Ad Spend</span><span class="stat-value white">$100/day</span></div>
+    <div class="stat"><span class="stat-label">Top Product</span><span class="stat-value white">Swirl Air Cleaner</span></div>
+  </div>
+
+  <!-- Debt Elimination -->
+  <div class="card">
+    <h2>💳 Debt — Kill Plan</h2>
+    <div class="debt-item">
+      <div><div class="debt-label">Chase Credit Card</div><div class="debt-rate">27.24% APR</div></div>
+      <div style="text-align:right"><div class="red" style="font-weight:700">$5,687</div><div><span class="badge badge-kill">Pay Now</span></div></div>
+    </div>
+    <div class="debt-item">
+      <div><div class="debt-label">Apple Card</div><div class="debt-rate">28% APR</div></div>
+      <div style="text-align:right"><div class="red" style="font-weight:700">$2,796</div><div><span class="badge badge-kill">Pay Now</span></div></div>
+    </div>
+    <div class="debt-item">
+      <div><div class="debt-label">PayPal Card</div><div class="debt-rate">29% APR</div></div>
+      <div style="text-align:right"><div class="red" style="font-weight:700">$3,677</div><div><span class="badge badge-kill">Month 1</span></div></div>
+    </div>
+    <div class="debt-item">
+      <div><div class="debt-label">Venmo Card</div><div class="debt-rate">28% APR</div></div>
+      <div style="text-align:right"><div class="red" style="font-weight:700">$3,722</div><div><span class="badge badge-kill">Month 1</span></div></div>
+    </div>
+    <div class="debt-item">
+      <div><div class="debt-label">AMEX</div><div class="debt-rate">0% APR</div></div>
+      <div style="text-align:right"><div style="color:#888;font-weight:700">$2,337</div><div><span class="badge badge-ok">No Rush</span></div></div>
+    </div>
+    <div class="debt-item">
+      <div><div class="debt-label">CNC Machine Loan</div><div class="debt-rate">8.8% APR · Asset</div></div>
+      <div style="text-align:right"><div style="color:#888;font-weight:700">$24,600</div><div><span class="badge badge-ok">Keep</span></div></div>
+    </div>
+    <div class="total-row"><span class="red">High-Interest Eliminated</span><span class="green">$15,882</span></div>
+  </div>
+
+  <!-- Loan Allocation -->
+  <div class="card">
+    <h2>💰 $30k Loan Allocation</h2>
+    <div class="alloc-item">
+      <div class="alloc-left"><div class="alloc-name">CNC Operator (3 days/week · 6mo)</div><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:40%"></div></div></div>
+      <div class="alloc-amount">$12,000</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-left"><div class="alloc-name">New Product Machining</div><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:23%"></div></div></div>
+      <div class="alloc-amount">$7,000</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-left"><div class="alloc-name">Apparel Inventory (2 drops)</div><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:17%"></div></div></div>
+      <div class="alloc-amount">$5,000</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-left"><div class="alloc-name">Air Cleaner Cover Variants</div><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:10%"></div></div></div>
+      <div class="alloc-amount">$3,000</div>
+    </div>
+    <div class="alloc-item">
+      <div class="alloc-left"><div class="alloc-name">Meta Ads Scale-Up</div><div class="alloc-bar-wrap"><div class="alloc-bar" style="width:10%"></div></div></div>
+      <div class="alloc-amount">$3,000</div>
+    </div>
+    <div class="total-row"><span>Total</span><span class="green">$30,000</span></div>
+  </div>
+
+  <!-- Revenue Projection -->
+  <div class="card">
+    <h2>📈 Revenue Projection</h2>
+    <div class="projection">
+      <div class="proj-bar-wrap">
+        <div class="proj-bar now"></div>
+        <div class="proj-label">Today</div>
+        <div class="proj-value now">$13k/mo</div>
+      </div>
+      <div style="font-size:28px;color:#555;padding-bottom:40px;">→</div>
+      <div class="proj-bar-wrap">
+        <div class="proj-bar target"></div>
+        <div class="proj-label">Month 4-6</div>
+        <div class="proj-value target">$23k/mo</div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="stat"><span class="stat-label">CNC Parts (more SKUs + operator)</span><span class="stat-value green">+$6,000</span></div>
+      <div class="stat"><span class="stat-label">Apparel Drops</span><span class="stat-value green">+$3,000</span></div>
+      <div class="stat"><span class="stat-label">Dropship + Ads</span><span class="stat-value green">+$1,000</span></div>
+      <div class="stat"><span class="stat-label">Loan repaid in</span><span class="stat-value orange">~4 months</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- New Products -->
+<div class="card" style="margin-bottom:20px">
+  <h2>🔧 New Products Pipeline</h2>
+  <div class="product-grid" style="margin-top:10px">
+    <div class="product-chip p1"><div class="icon">🏍️</div><div class="name">Mid Controls Shovelhead</div><div class="priority">● Priority 1</div></div>
+    <div class="product-chip p1"><div class="icon">↕️</div><div class="name">FXR/Dyna Risers</div><div class="priority">● Priority 1</div></div>
+    <div class="product-chip p2"><div class="icon">⭕</div><div class="name">Brake Rotors</div><div class="priority">● Priority 2</div></div>
+    <div class="product-chip p2"><div class="icon">⚙️</div><div class="name">Sprockets</div><div class="priority">● Priority 2</div></div>
+    <div class="product-chip p2"><div class="icon">🦶</div><div class="name">FXR/Dyna Pegs</div><div class="priority">● Priority 2</div></div>
+    <div class="product-chip p3"><div class="icon">🤲</div><div class="name">Hand Controls</div><div class="priority">● Priority 3</div></div>
+    <div class="product-chip p3"><div class="icon">💨</div><div class="name">Air Cleaner Covers (3 designs)</div><div class="priority">● Priority 3</div></div>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="card" style="margin-bottom:20px">
+  <h2>🗓️ Action Timeline</h2>
+  <div class="timeline">
+    <div class="phase">
+      <div class="phase-dot">1</div>
+      <div class="phase-content">
+        <h3>This Week</h3>
+        <ul>
+          <li>Pay off Chase ($5,687) + Apple Card ($2,796) with cash</li>
+          <li>Accept Shopify $30k loan</li>
+          <li>Post CNC operator job (Indeed, Craigslist, trade schools)</li>
+          <li>Place apparel order with Pakistan vendor (8-10 week lead time)</li>
+          <li>Send RFQs to 3-5 Alibaba CNC shops for air cleaner covers</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-dot">2</div>
+      <div class="phase-content">
+        <h3>Month 1 — Bike 2 Sells</h3>
+        <ul>
+          <li>Pay off PayPal ($3,677) + Venmo ($3,722) — all high-interest gone</li>
+          <li>Interview and hire CNC operator</li>
+          <li>Finalize CAD files for 3 air cleaner cover designs</li>
+          <li>Order air cleaner cover samples overseas</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-dot">3</div>
+      <div class="phase-content">
+        <h3>Month 2-3 — Inventory In</h3>
+        <ul>
+          <li>CNC operator running 3 days/week</li>
+          <li>Mid controls, risers, rotors in production</li>
+          <li>Air cleaner cover samples arrive → approve → order full batch</li>
+          <li>Apparel Drop 1 arrives → launch with Meta ads + social</li>
+          <li>Email 542+ past customers about new products</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="phase-dot">4</div>
+      <div class="phase-content">
+        <h3>Month 4-6 — Scale</h3>
+        <ul>
+          <li>New CNC parts live on Shopify</li>
+          <li>FXR/Dyna parts in production</li>
+          <li>Apparel Drop 2 ordered and in pipeline</li>
+          <li>Meta ads scaled behind proven new products</li>
+          <li>Shopify loan repayment well underway</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="summary-box">
+  <h2>✅ The Bottom Line</h2>
+  <p>You're not taking on debt to survive — you're taking on debt to buy capacity. The business already works ($53k in 120 days on $100/day ad spend is proof). The two bike sales clean the balance sheet so the Shopify loan goes 100% into offense. More machine time + more products + more inventory = more for the ads to work with. This is buying more of what already works.</p>
+</div>
+
+</body>
+</html>

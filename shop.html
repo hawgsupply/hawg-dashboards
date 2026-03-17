@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hawg Supply — Shop Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+  h1 { color: #ff6a00; font-size: 26px; margin-bottom: 4px; }
+  .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
+
+  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { font-size: 12px; padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: all 0.15s; }
+  .btn-orange { background: #ff6a00; color: #000; }
+  .btn-orange:hover { background: #ff8833; }
+  .btn-ghost { background: #222; color: #aaa; border: 1px solid #333; }
+  .btn-ghost:hover { border-color: #555; color: #eee; }
+  .btn-danger { background: #3a0000; color: #ff4444; border: 1px solid #660000; }
+  .btn-danger:hover { background: #550000; }
+
+  .stats-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .stat-pill { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; min-width: 70px; }
+  .stat-pill .num { font-size: 22px; font-weight: 700; }
+  .stat-pill .lbl { font-size: 11px; color: #666; margin-top: 2px; }
+  .stat-pill.done-stat .num { color: #44cc77; }
+  .stat-pill.prog-stat .num { color: #ff9900; }
+  .stat-pill.ns-stat .num { color: #ff4444; }
+  .stat-pill.ord-stat .num { color: #4488ff; }
+
+  .progress-bar-wrap { width: 100%; background: #222; border-radius: 4px; height: 8px; margin-bottom: 24px; overflow: hidden; display: flex; }
+  .progress-seg { height: 8px; transition: width 0.4s; }
+  .seg-done { background: #44cc77; }
+  .seg-prog { background: #ff9900; }
+  .seg-ord { background: #4488ff; }
+  .seg-ns { background: #333; }
+
+  .section { margin-bottom: 28px; }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-size: 13px; color: #ff6a00; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
+  .section-title span { background: #ff6a00; color: #000; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+
+  .task-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; }
+  .task-card.done { opacity: 0.45; border-color: #1e3a1e; }
+  .task-card.in-progress { border-color: #ff9900; }
+  .task-card.ordered { border-color: #4488ff; }
+
+  .task-left { flex: 1; }
+  .task-title { font-size: 14px; color: #eee; line-height: 1.5; margin-bottom: 6px; }
+  .task-card.done .task-title { text-decoration: line-through; color: #555; }
+
+  .task-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .task-actions { display: flex; gap: 4px; }
+  .icon-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 2px 5px; border-radius: 4px; color: #555; transition: color 0.15s; }
+  .icon-btn:hover { color: #eee; background: #222; }
+  .icon-btn.delete:hover { color: #ff4444; }
+
+  .day-select { background: #222; border: 1px solid #333; color: #aaa; font-size: 12px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
+  .day-select:focus { outline: none; border-color: #ff6a00; }
+
+  .status-group { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .status-btn { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid #333; background: #222; color: #777; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .status-btn:hover { border-color: #555; color: #ccc; }
+  .status-btn.active-not-started { background: #2a2a2a; border-color: #555; color: #ccc; }
+  .status-btn.active-in-progress { background: #3a2a00; border-color: #ff9900; color: #ff9900; }
+  .status-btn.active-ordered { background: #001a3a; border-color: #4488ff; color: #4488ff; }
+  .status-btn.active-done { background: #0a2a0a; border-color: #44cc77; color: #44cc77; }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 24px; width: 480px; max-width: 95vw; }
+  .modal h2 { color: #ff6a00; font-size: 16px; margin-bottom: 18px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group textarea, .form-group select { width: 100%; background: #222; border: 1px solid #333; color: #eee; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; resize: vertical; }
+  .form-group textarea { min-height: 80px; }
+  .form-group select { height: 36px; }
+  .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #ff6a00; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+  .day-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .day-Mon { background: #1a2535; color: #6aa3ff; }
+  .day-Tue { background: #251a35; color: #b06aff; }
+  .day-Wed { background: #251a1a; color: #ff6a6a; }
+  .day-Thu { background: #1a2520; color: #6affaa; }
+  .day-Fri { background: #2a2510; color: #ffcc44; }
+  .day-Sat { background: #1a2525; color: #44ffee; }
+  .day-Sun { background: #252015; color: #ffaa44; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <h1>🐗 Shop Dashboard</h1>
+    <p class="subtitle" id="dateDisplay"></p>
+  </div>
+  <div class="top-actions">
+    <button class="btn btn-ghost" onclick="exportData()">⬇ Export</button>
+    <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆ Import</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-pill done-stat"><div class="num" id="stat-done">0</div><div class="lbl">Done</div></div>
+  <div class="stat-pill prog-stat"><div class="num" id="stat-prog">0</div><div class="lbl">In Progress</div></div>
+  <div class="stat-pill ord-stat"><div class="num" id="stat-ord">0</div><div class="lbl">Ordered</div></div>
+  <div class="stat-pill ns-stat"><div class="num" id="stat-ns">0</div><div class="lbl">Not Started</div></div>
+</div>
+<div class="progress-bar-wrap" id="progressBar"></div>
+
+<!-- MACHINING -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">⚙️ Machining Tasks <span id="machining-count">0</span></div>
+    <button class="btn btn-orange" onclick="openAddModal('machining')">+ Add Task</button>
+  </div>
+  <div id="machining-tasks"></div>
+</div>
+
+<!-- BIKE / FAB -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">🔧 Bike & Fabrication <span id="bike-count">0</span></div>
+    <button class="btn btn-orange" onclick="openAddModal('bike')">+ Add Task</button>
+  </div>
+  <div id="bike-tasks"></div>
+</div>
+
+<!-- DESIGN -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">✏️ Design Tasks <span id="design-count">0</span></div>
+    <button class="btn btn-orange" onclick="openAddModal('design')">+ Add Task</button>
+  </div>
+  <div id="design-tasks"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Add Task</h2>
+    <div class="form-group">
+      <label>Task Description</label>
+      <textarea id="modalTaskTitle" placeholder="Describe the task..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Day</label>
+      <select id="modalDay">
+        <option>Mon</option><option>Tue</option><option>Wed</option>
+        <option>Thu</option><option>Fri</option><option>Sat</option><option>Sun</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="modalStatus">
+        <option>Not Started</option><option>In Progress</option>
+        <option>Ordered</option><option>Done</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-orange" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const STATUSES = ['Not Started','In Progress','Ordered','Done'];
+const SECTIONS = { machining: 'machining', bike: 'bike', design: 'design' };
+
+let tasks = {
+  machining: [
+    { id: 'm1', title: 'Op2 for carb supports', day: 'Mon', status: 'Not Started' },
+    { id: 'm2', title: 'Brembo adapter plates', day: 'Mon', status: 'Not Started' },
+    { id: 'm3', title: 'Quick pull brackets', day: 'Mon', status: 'Not Started' },
+    { id: 'm4', title: 'Linkert to S&S adapter plates', day: 'Mon', status: 'Not Started' },
+  ],
+  bike: [
+    { id: 'b1', title: "Parts for Matt's '68 Shovel — find flywheels & rods, fix bolt holes on oil pump, replace oil pump bushing", day: 'Tue', status: 'Not Started' },
+    { id: 'b2', title: 'Alex shovelhead — waiting on cases, measure runout on flywheels, disassembly heads', day: 'Mon', status: 'Not Started' },
+    { id: 'b3', title: 'Bobby shovel — set endplay, install oil pump, assemble cases, hone cylinders and paint, disassemble heads and blast, order cam cover gasket & rocker box, send cam cover and rocker boxes out for polishing', day: 'Tue', status: 'Not Started' },
+    { id: 'b4', title: 'Disassemble Panhead bike, tear down motor', day: 'Mon', status: 'Done' },
+    { id: 'b5', title: 'Hardtail Bobby Shovelhead frame', day: 'Tue', status: 'Done' },
+    { id: 'b6', title: 'Finish Yaniv top end', day: 'Tue', status: 'Done' },
+    { id: 'b7', title: 'Weld RotoPax mounts to restock', day: 'Mon', status: 'Done' },
+  ],
+  design: [
+    { id: 'd1', title: 'Design rear bracket for Brembo caliper p34 — rigid and swingarm', day: 'Wed', status: 'In Progress' },
+    { id: 'd2', title: 'Design front brackets for Brembo p34 39mm forks', day: 'Mon', status: 'Not Started' },
+    { id: 'd3', title: 'Design peg block', day: 'Mon', status: 'Done' },
+    { id: 'd4', title: 'Work on mid control package design', day: 'Tue', status: 'Done' },
+    { id: 'd5', title: 'Design new air cleaner styles — 3 styles', day: 'Thu', status: 'Not Started' },
+  ]
+};
+
+// Load saved state
+const saved = localStorage.getItem('shopDashboard2');
+if (saved) {
+  try { tasks = JSON.parse(saved); } catch(e) {}
+}
+
+function saveState() {
+  localStorage.setItem('shopDashboard2', JSON.stringify(tasks));
+}
+
+function statusKey(s) {
+  return s.toLowerCase().replace(/\s+/g, '-');
+}
+
+function genId() {
+  return 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2,5);
+}
+
+function findTask(id) {
+  for (const section of Object.keys(tasks)) {
+    const idx = tasks[section].findIndex(t => t.id === id);
+    if (idx > -1) return { task: tasks[section][idx], section, idx };
+  }
+}
+
+function changeStatus(id, status) {
+  const { task } = findTask(id);
+  task.status = status;
+  saveState();
+  renderAll();
+}
+
+function changeDay(id, day) {
+  const { task } = findTask(id);
+  task.day = day;
+  saveState();
+  renderAll();
+}
+
+function deleteTask(id) {
+  const { section, idx } = findTask(id);
+  if (confirm('Delete this task?')) {
+    tasks[section].splice(idx, 1);
+    saveState();
+    renderAll();
+  }
+}
+
+// Modal state
+let modalMode = 'add'; // 'add' or 'edit'
+let modalSection = '';
+let modalEditId = '';
+
+function openAddModal(section) {
+  modalMode = 'add';
+  modalSection = section;
+  document.getElementById('modalTitle').textContent = 'Add Task';
+  document.getElementById('modalTaskTitle').value = '';
+  document.getElementById('modalDay').value = 'Mon';
+  document.getElementById('modalStatus').value = 'Not Started';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openEditModal(id) {
+  const { task, section } = findTask(id);
+  modalMode = 'edit';
+  modalSection = section;
+  modalEditId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Task';
+  document.getElementById('modalTaskTitle').value = task.title;
+  document.getElementById('modalDay').value = task.day;
+  document.getElementById('modalStatus').value = task.status;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function saveModal() {
+  const title = document.getElementById('modalTaskTitle').value.trim();
+  if (!title) return;
+  const day = document.getElementById('modalDay').value;
+  const status = document.getElementById('modalStatus').value;
+
+  if (modalMode === 'add') {
+    tasks[modalSection].push({ id: genId(), title, day, status });
+  } else {
+    const { task } = findTask(modalEditId);
+    task.title = title;
+    task.day = day;
+    task.status = status;
+  }
+  saveState();
+  closeModal();
+  renderAll();
+}
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'shop-tasks-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      tasks = JSON.parse(e.target.result);
+      saveState();
+      renderAll();
+    } catch(err) { alert('Invalid file'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function renderTask(task) {
+  const sk = statusKey(task.status);
+  const card = document.createElement('div');
+  card.className = `task-card ${sk}`;
+  card.innerHTML = `
+    <div class="task-left">
+      <div class="task-title">${task.title}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+        <span class="day-badge day-${task.day}">${task.day}</span>
+      </div>
+    </div>
+    <div class="task-right">
+      <div class="task-actions">
+        <select class="day-select" onchange="changeDay('${task.id}', this.value)">
+          ${DAYS.map(d => `<option value="${d}" ${d === task.day ? 'selected' : ''}>${d}</option>`).join('')}
+        </select>
+        <button class="icon-btn" title="Edit" onclick="openEditModal('${task.id}')">✏️</button>
+        <button class="icon-btn delete" title="Delete" onclick="deleteTask('${task.id}')">🗑️</button>
+      </div>
+      <div class="status-group">
+        ${STATUSES.map(s => `<button class="status-btn ${statusKey(s) === sk ? 'active-' + statusKey(s) : ''}" onclick="changeStatus('${task.id}', '${s}')">${s}</button>`).join('')}
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function renderSection(containerId, taskList, countId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  taskList.forEach(task => container.appendChild(renderTask(task)));
+  document.getElementById(countId).textContent = taskList.length;
+}
+
+function updateStats() {
+  const all = [...tasks.machining, ...tasks.bike, ...tasks.design];
+  const done = all.filter(t => t.status === 'Done').length;
+  const prog = all.filter(t => t.status === 'In Progress').length;
+  const ord = all.filter(t => t.status === 'Ordered').length;
+  const ns = all.filter(t => t.status === 'Not Started').length;
+  const total = all.length || 1;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-prog').textContent = prog;
+  document.getElementById('stat-ord').textContent = ord;
+  document.getElementById('stat-ns').textContent = ns;
+  document.getElementById('progressBar').innerHTML = `
+    <div class="progress-seg seg-done" style="width:${done/total*100}%"></div>
+    <div class="progress-seg seg-prog" style="width:${prog/total*100}%"></div>
+    <div class="progress-seg seg-ord" style="width:${ord/total*100}%"></div>
+    <div class="progress-seg seg-ns" style="width:${ns/total*100}%"></div>
+  `;
+}
+
+function renderAll() {
+  renderSection('machining-tasks', tasks.machining, 'machining-count');
+  renderSection('bike-tasks', tasks.bike, 'bike-count');
+  renderSection('design-tasks', tasks.design, 'design-count');
+  updateStats();
+}
+
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+renderAll();
+</script>
+</body>
+</html>
