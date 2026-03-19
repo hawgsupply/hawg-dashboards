@@ -3,148 +3,579 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hawg Supply — Shop Dashboard</title>
+<title>Hawg Supply — Shop Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --orange: #FF6B00;
+    --cyan: #00D4FF;
+    --green: #00FF88;
+    --purple: #AA44FF;
+    --red: #FF3355;
+    --bg: #080C10;
+    --bg2: #0D1117;
+    --bg3: #141B24;
+    --border: #1E2A38;
+    --border2: #253347;
+    --text: #C8D8E8;
+    --muted: #4A6080;
+    --mono: 'Share Tech Mono', monospace;
+    --head: 'Rajdhani', sans-serif;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
-  h1 { color: #ff6a00; font-size: 26px; margin-bottom: 4px; }
-  .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
 
-  .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-  .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btn { font-size: 12px; padding: 7px 14px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: all 0.15s; }
-  .btn-orange { background: #ff6a00; color: #000; }
-  .btn-orange:hover { background: #ff8833; }
-  .btn-ghost { background: #222; color: #aaa; border: 1px solid #333; }
-  .btn-ghost:hover { border-color: #555; color: #eee; }
-  .btn-danger { background: #3a0000; color: #ff4444; border: 1px solid #660000; }
-  .btn-danger:hover { background: #550000; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--head);
+    font-size: 15px;
+    min-height: 100vh;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.015) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
 
-  .stats-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-  .stat-pill { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; min-width: 70px; }
-  .stat-pill .num { font-size: 22px; font-weight: 700; }
-  .stat-pill .lbl { font-size: 11px; color: #666; margin-top: 2px; }
-  .stat-pill.done-stat .num { color: #44cc77; }
-  .stat-pill.prog-stat .num { color: #ff9900; }
-  .stat-pill.ns-stat .num { color: #ff4444; }
-  .stat-pill.ord-stat .num { color: #4488ff; }
+  .shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
 
-  .progress-bar-wrap { width: 100%; background: #222; border-radius: 4px; height: 8px; margin-bottom: 24px; overflow: hidden; display: flex; }
-  .progress-seg { height: 8px; transition: width 0.4s; }
-  .seg-done { background: #44cc77; }
-  .seg-prog { background: #ff9900; }
-  .seg-ord { background: #4488ff; }
-  .seg-ns { background: #333; }
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--orange), transparent);
+  }
+  .brand { display: flex; flex-direction: column; gap: 2px; }
+  .brand-name {
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 32px;
+    letter-spacing: 4px;
+    color: #fff;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .brand-name span { color: var(--orange); }
+  .brand-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .header-right { text-align: right; }
+  .date-display {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .header-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
 
-  .section { margin-bottom: 28px; }
-  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-  .section-title { font-size: 13px; color: #ff6a00; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px; }
-  .section-title span { background: #ff6a00; color: #000; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 12px;
+    padding: 7px 16px;
+    border-radius: 2px;
+    border: none;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: #000;
+    box-shadow: 0 0 12px rgba(255,107,0,0.3);
+  }
+  .btn-primary:hover { background: #FF8C33; box-shadow: 0 0 20px rgba(255,107,0,0.5); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
 
-  .task-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s; }
-  .task-card.done { opacity: 0.45; border-color: #1e3a1e; }
-  .task-card.in-progress { border-color: #ff9900; }
-  .task-card.ordered { border-color: #4488ff; }
+  /* ── STATS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .stat-card.s-done::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .stat-card.s-prog::before { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+  .stat-card.s-ord::before { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .stat-card.s-ns::before { background: var(--muted); }
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 400;
+  }
+  .s-done .stat-num { color: var(--green); text-shadow: 0 0 12px rgba(0,255,136,0.4); }
+  .s-prog .stat-num { color: var(--orange); text-shadow: 0 0 12px rgba(255,107,0,0.4); }
+  .s-ord .stat-num { color: var(--cyan); text-shadow: 0 0 12px rgba(0,212,255,0.4); }
+  .s-ns .stat-num { color: var(--muted); }
+  .stat-lbl {
+    font-family: var(--head);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 32px;
+    display: flex;
+    overflow: hidden;
+  }
+  .pseg { height: 4px; transition: width 0.5s ease; }
+  .pseg-done { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .pseg-prog { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+  .pseg-ord { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  .pseg-ns { background: var(--border2); }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 32px; }
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .section-head::before {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 60px; height: 1px;
+    background: var(--orange);
+    box-shadow: 0 0 6px var(--orange);
+  }
+  .section-label {
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .sec-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--orange);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  /* ── TASK CARD ── */
+  .task-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--muted);
+    border-radius: 2px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .task-card:hover { border-color: var(--border2); }
+  .task-card.done {
+    opacity: 0.35;
+    border-left-color: var(--green);
+  }
+  .task-card.in-progress {
+    border-left-color: var(--orange);
+    box-shadow: -2px 0 8px rgba(255,107,0,0.15);
+  }
+  .task-card.ordered {
+    border-left-color: var(--cyan);
+    box-shadow: -2px 0 8px rgba(0,212,255,0.15);
+  }
+  .task-card.not-started { border-left-color: var(--border2); }
 
   .task-left { flex: 1; }
-  .task-title { font-size: 14px; color: #eee; line-height: 1.5; margin-bottom: 6px; }
-  .task-card.done .task-title { text-decoration: line-through; color: #555; }
+  .task-title {
+    font-family: var(--head);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .task-card.done .task-title { text-decoration: line-through; color: var(--muted); }
 
-  .task-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-  .task-actions { display: flex; gap: 4px; }
-  .icon-btn { background: none; border: none; cursor: pointer; font-size: 15px; padding: 2px 5px; border-radius: 4px; color: #555; transition: color 0.15s; }
-  .icon-btn:hover { color: #eee; background: #222; }
-  .icon-btn.delete:hover { color: #ff4444; }
+  .task-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .day-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .day-Mon { background: rgba(106,163,255,0.12); color: #6AA3FF; border: 1px solid rgba(106,163,255,0.25); }
+  .day-Tue { background: rgba(176,106,255,0.12); color: #B06AFF; border: 1px solid rgba(176,106,255,0.25); }
+  .day-Wed { background: rgba(255,106,106,0.12); color: #FF6A6A; border: 1px solid rgba(255,106,106,0.25); }
+  .day-Thu { background: rgba(106,255,170,0.12); color: #6AFFAA; border: 1px solid rgba(106,255,170,0.25); }
+  .day-Fri { background: rgba(255,204,68,0.12); color: #FFCC44; border: 1px solid rgba(255,204,68,0.25); }
+  .day-Sat { background: rgba(68,255,238,0.12); color: #44FFEE; border: 1px solid rgba(68,255,238,0.25); }
+  .day-Sun { background: rgba(255,170,68,0.12); color: #FFAA44; border: 1px solid rgba(255,170,68,0.25); }
 
-  .day-select { background: #222; border: 1px solid #333; color: #aaa; font-size: 12px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
-  .day-select:focus { outline: none; border-color: #ff6a00; }
+  .task-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .task-actions { display: flex; gap: 4px; align-items: center; }
+  .day-select {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .day-select:focus { outline: none; border-color: var(--orange); color: var(--text); }
+  .icon-btn {
+    background: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 3px 7px;
+    border-radius: 2px;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .icon-btn.delete:hover { border-color: var(--red); color: var(--red); }
 
-  .status-group { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
-  .status-btn { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid #333; background: #222; color: #777; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-  .status-btn:hover { border-color: #555; color: #ccc; }
-  .status-btn.active-not-started { background: #2a2a2a; border-color: #555; color: #ccc; }
-  .status-btn.active-in-progress { background: #3a2a00; border-color: #ff9900; color: #ff9900; }
-  .status-btn.active-ordered { background: #001a3a; border-color: #4488ff; color: #4488ff; }
-  .status-btn.active-done { background: #0a2a0a; border-color: #44cc77; color: #44cc77; }
+  .status-group { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+  .status-btn {
+    font-family: var(--head);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .status-btn:hover { border-color: var(--border2); color: var(--text); }
+  .status-btn.active-not-started { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+  .status-btn.active-in-progress { border-color: var(--orange); color: var(--orange); background: rgba(255,107,0,0.1); box-shadow: 0 0 6px rgba(255,107,0,0.2); }
+  .status-btn.active-ordered { border-color: var(--cyan); color: var(--cyan); background: rgba(0,212,255,0.1); box-shadow: 0 0 6px rgba(0,212,255,0.2); }
+  .status-btn.active-done { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.1); box-shadow: 0 0 6px rgba(0,255,136,0.2); }
 
-  /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+  }
   .modal-overlay.open { display: flex; }
-  .modal { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 24px; width: 480px; max-width: 95vw; }
-  .modal h2 { color: #ff6a00; font-size: 16px; margin-bottom: 18px; }
-  .form-group { margin-bottom: 14px; }
-  .form-group label { display: block; font-size: 12px; color: #888; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .form-group textarea, .form-group select { width: 100%; background: #222; border: 1px solid #333; color: #eee; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: inherit; resize: vertical; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-top: 2px solid var(--orange);
+    border-radius: 4px;
+    padding: 28px;
+    width: 480px;
+    max-width: 95vw;
+    box-shadow: 0 0 40px rgba(255,107,0,0.15);
+  }
+  .modal h2 {
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--orange);
+    margin-bottom: 20px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    border-radius: 2px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: var(--head);
+    resize: vertical;
+    transition: border-color 0.15s;
+  }
   .form-group textarea { min-height: 80px; }
-  .form-group select { height: 36px; }
-  .form-group textarea:focus, .form-group select:focus { outline: none; border-color: #ff6a00; }
-  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .form-group select { height: 38px; }
+  .form-group textarea:focus,
+  .form-group select:focus { outline: none; border-color: var(--orange); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
 
-  .day-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-  .day-Mon { background: #1a2535; color: #6aa3ff; }
-  .day-Tue { background: #251a35; color: #b06aff; }
-  .day-Wed { background: #251a1a; color: #ff6a6a; }
-  .day-Thu { background: #1a2520; color: #6affaa; }
-  .day-Fri { background: #2a2510; color: #ffcc44; }
-  .day-Sat { background: #1a2525; color: #44ffee; }
-  .day-Sun { background: #252015; color: #ffaa44; }
+  /* ── WHOLESALE CARDS ── */
+  .wo-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--orange);
+    border-radius: 2px;
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .wo-card.status-shipped { border-left-color: var(--cyan); }
+  .wo-card.status-invoiced { border-left-color: var(--purple); }
+  .wo-card.status-done { border-left-color: var(--green); opacity: 0.5; }
+
+  .wo-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .wo-po {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--orange);
+    letter-spacing: 2px;
+  }
+  .wo-card.status-shipped .wo-po { color: var(--cyan); }
+  .wo-card.status-invoiced .wo-po { color: var(--purple); }
+  .wo-card.status-done .wo-po { color: var(--green); }
+
+  .wo-date { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: 10px; }
+  .wo-ship-by { font-family: var(--mono); font-size: 11px; }
+  .wo-ship-by strong { color: #fff; }
+
+  .wo-meta { display: flex; gap: 20px; font-size: 12px; color: var(--muted); flex-wrap: wrap; margin-bottom: 12px; font-family: var(--head); }
+
+  .wo-status-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+  .wo-sbtn {
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    cursor: pointer;
+    border: 1px solid;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .wo-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .wo-table thead tr { border-bottom: 1px solid var(--border2); }
+  .wo-table th { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; padding: 5px 8px; font-weight: 400; }
+  .wo-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .wo-table td.sku { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .wo-table td.desc { color: var(--text); }
+  .wo-table td.num { text-align: right; font-family: var(--mono); font-size: 11px; }
+  .wo-table td.price { text-align: right; font-family: var(--mono); font-size: 11px; color: var(--orange); }
+  .wo-total { text-align: right; padding: 8px 8px 0; font-family: var(--mono); font-size: 14px; color: var(--green); border-top: 1px solid var(--border2); margin-top: 4px; }
+  .wo-total-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-right: 12px; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .task-card { flex-direction: column; }
+    .task-right { align-items: flex-start; }
+  }
 </style>
 </head>
 <body>
+<div class="shell">
 
-<div class="top-bar">
-  <div>
-    <h1>🐗 Shop Dashboard</h1>
-    <p class="subtitle" id="dateDisplay"></p>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-name">HAWG <span>SUPPLY</span></div>
+      <div class="brand-sub">// SHOP OPERATIONS CENTER</div>
+    </div>
+    <div class="header-right">
+      <div class="date-display" id="dateDisplay"></div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" onclick="exportData()">↓ EXPORT</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">↑ IMPORT</button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
   </div>
-  <div class="top-actions">
-    <button class="btn btn-ghost" onclick="exportData()">⬇ Export</button>
-    <button class="btn btn-ghost" onclick="document.getElementById('importFile').click()">⬆ Import</button>
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card s-done">
+      <div class="stat-num" id="stat-done">0</div>
+      <div class="stat-lbl">Completed</div>
+    </div>
+    <div class="stat-card s-prog">
+      <div class="stat-num" id="stat-prog">0</div>
+      <div class="stat-lbl">In Progress</div>
+    </div>
+    <div class="stat-card s-ord">
+      <div class="stat-num" id="stat-ord">0</div>
+      <div class="stat-lbl">Ordered</div>
+    </div>
+    <div class="stat-card s-ns">
+      <div class="stat-num" id="stat-ns">0</div>
+      <div class="stat-lbl">Not Started</div>
+    </div>
   </div>
+  <div class="progress-wrap" id="progressBar"></div>
+
+  <!-- MACHINING -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">⚙ Machining Tasks <span class="sec-count" id="machining-count">0</span></div>
+      <button class="btn btn-primary" onclick="openAddModal('machining')">+ ADD TASK</button>
+    </div>
+    <div id="machining-tasks"></div>
+  </div>
+
+  <!-- BIKE / FAB -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">🔧 Bike &amp; Fabrication <span class="sec-count" id="bike-count">0</span></div>
+      <button class="btn btn-primary" onclick="openAddModal('bike')">+ ADD TASK</button>
+    </div>
+    <div id="bike-tasks"></div>
+  </div>
+
+  <!-- DESIGN -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">◈ Design Tasks <span class="sec-count" id="design-count">0</span></div>
+      <button class="btn btn-primary" onclick="openAddModal('design')">+ ADD TASK</button>
+    </div>
+    <div id="design-tasks"></div>
+  </div>
+
+  <!-- MATERIALS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">◈ Materials &amp; Inventory <span class="sec-count" id="materials-count">0</span></div>
+      <button class="btn btn-primary" onclick="openMaterialModal()">+ ADD ITEM</button>
+    </div>
+    <div id="materials-list"></div>
+  </div>
+
+  <!-- WHOLESALE ORDERS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-label">▣ Wholesale Orders <span class="sec-count" id="wholesale-count">0</span></div>
+    </div>
+    <div id="wholesale-orders-list"></div>
+  </div>
+
 </div>
 
-<div class="stats-bar">
-  <div class="stat-pill done-stat"><div class="num" id="stat-done">0</div><div class="lbl">Done</div></div>
-  <div class="stat-pill prog-stat"><div class="num" id="stat-prog">0</div><div class="lbl">In Progress</div></div>
-  <div class="stat-pill ord-stat"><div class="num" id="stat-ord">0</div><div class="lbl">Ordered</div></div>
-  <div class="stat-pill ns-stat"><div class="num" id="stat-ns">0</div><div class="lbl">Not Started</div></div>
-</div>
-<div class="progress-bar-wrap" id="progressBar"></div>
-
-<!-- MACHINING -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-title">⚙️ Machining Tasks <span id="machining-count">0</span></div>
-    <button class="btn btn-orange" onclick="openAddModal('machining')">+ Add Task</button>
+<!-- MATERIAL MODAL -->
+<div class="modal-overlay" id="matModalOverlay">
+  <div class="modal">
+    <h2>Add Material / Inventory</h2>
+    <div class="form-group">
+      <label>Item Name</label>
+      <textarea id="matName" placeholder="e.g. 304SS Shifter Shafts" style="min-height:50px"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label>Quantity</label>
+        <textarea id="matQty" placeholder="e.g. 60 pcs" style="min-height:38px;resize:none"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="matStatus">
+          <option>Ordered</option><option>Shipped</option><option>In Stock</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Supplier</label>
+      <textarea id="matSupplier" placeholder="e.g. China CNC, McMaster-Carr" style="min-height:38px;resize:none"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Cost</label>
+      <textarea id="matCost" placeholder="e.g. $1,275 shipped" style="min-height:38px;resize:none"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="matNotes" placeholder="Any additional notes..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeMaterialModal()">CANCEL</button>
+      <button class="btn btn-primary" onclick="saveMaterial()">SAVE</button>
+    </div>
   </div>
-  <div id="machining-tasks"></div>
-</div>
-
-<!-- BIKE / FAB -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-title">🔧 Bike & Fabrication <span id="bike-count">0</span></div>
-    <button class="btn btn-orange" onclick="openAddModal('bike')">+ Add Task</button>
-  </div>
-  <div id="bike-tasks"></div>
-</div>
-
-<!-- DESIGN -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-title">✏️ Design Tasks <span id="design-count">0</span></div>
-    <button class="btn btn-orange" onclick="openAddModal('design')">+ Add Task</button>
-  </div>
-  <div id="design-tasks"></div>
-</div>
-
-<!-- WHOLESALE ORDERS -->
-<div class="section">
-  <div class="section-header">
-    <div class="section-title">📦 Wholesale Orders <span id="wholesale-count">0</span></div>
-  </div>
-  <div id="wholesale-orders-list"></div>
 </div>
 
 <!-- MODAL -->
@@ -170,8 +601,8 @@
       </select>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-orange" onclick="saveModal()">Save</button>
+      <button class="btn btn-ghost" onclick="closeModal()">CANCEL</button>
+      <button class="btn btn-primary" onclick="saveModal()">SAVE</button>
     </div>
   </div>
 </div>
@@ -200,52 +631,83 @@ const wholesaleOrders = [
   }
 ];
 
+const WO_STORAGE_KEY = 'hawg_wholesale_statuses';
+
+function getWholesaleStatuses() {
+  try { return JSON.parse(localStorage.getItem(WO_STORAGE_KEY) || '{}'); } catch { return {}; }
+}
+
+function setWholesaleStatus(po, status) {
+  const s = getWholesaleStatuses();
+  s[po] = status;
+  localStorage.setItem(WO_STORAGE_KEY, JSON.stringify(s));
+  renderWholesale();
+}
+
 function renderWholesale() {
   const container = document.getElementById('wholesale-orders-list');
   const badge = document.getElementById('wholesale-count');
+  const statuses = getWholesaleStatuses();
   badge.textContent = wholesaleOrders.length;
-  const statusColors = { pending: '#ff9900', shipped: '#4488ff', invoiced: '#aa44ff', done: '#44cc77' };
-  container.innerHTML = wholesaleOrders.map(o => `
-    <div class="task-card" style="flex-direction:column;gap:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div>
-          <span style="color:#ff6a00;font-weight:700;font-size:15px;">PO #${o.po}</span>
-          <span style="color:#888;font-size:12px;margin-left:10px;">${o.date}</span>
+
+  const statusColors = {
+    pending:  { border: '#FF6B00', text: '#FF6B00', bg: 'rgba(255,107,0,0.1)' },
+    shipped:  { border: '#00D4FF', text: '#00D4FF', bg: 'rgba(0,212,255,0.1)' },
+    invoiced: { border: '#AA44FF', text: '#AA44FF', bg: 'rgba(170,68,255,0.1)' },
+    done:     { border: '#00FF88', text: '#00FF88', bg: 'rgba(0,255,136,0.1)' },
+  };
+  const allStatuses = ['pending', 'shipped', 'invoiced', 'done'];
+
+  container.innerHTML = wholesaleOrders.map(o => {
+    const cur = statuses[o.po] || o.status;
+    return `
+    <div class="wo-card status-${cur}">
+      <div class="wo-header">
+        <div style="display:flex;align-items:baseline;gap:0">
+          <span class="wo-po">PO #${o.po}</span>
+          <span class="wo-date">${o.date}</span>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <span style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${statusColors[o.status]||'#555'};color:${statusColors[o.status]||'#aaa'};background:${statusColors[o.status]||'#555'}22;text-transform:uppercase;">${o.status}</span>
-          <span style="font-size:12px;color:#888;">Ship by: <strong style="color:#eee;">${o.ship_by}</strong></span>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <span class="wo-ship-by">SHIP BY: <strong>${o.ship_by}</strong></span>
+          <div class="wo-status-btns">
+            ${allStatuses.map(s => {
+              const c = statusColors[s];
+              const active = cur === s;
+              return `<button class="wo-sbtn" onclick="setWholesaleStatus('${o.po}','${s}')"
+                style="border-color:${c.border};color:${active?'#000':c.text};background:${active?c.border:c.bg};">${s}</button>`;
+            }).join('')}
+          </div>
         </div>
       </div>
-      <div style="display:flex;gap:16px;font-size:12px;color:#aaa;flex-wrap:wrap;">
-        <span>👤 ${o.customer} — ${o.contact}</span>
-        <span>📧 ${o.email}</span>
+      <div class="wo-meta">
+        <span>👤 ${o.customer} / ${o.contact}</span>
+        <span>✉ ${o.email}</span>
         <span>💳 ${o.terms}</span>
       </div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;">
-        <thead><tr style="color:#666;text-transform:uppercase;letter-spacing:0.5px;">
-          <th style="text-align:left;padding:4px 8px;">SKU</th>
-          <th style="text-align:left;padding:4px 8px;">Description</th>
-          <th style="text-align:center;padding:4px 8px;">Qty</th>
-          <th style="text-align:right;padding:4px 8px;">Unit</th>
-          <th style="text-align:right;padding:4px 8px;">Total</th>
+      <table class="wo-table">
+        <thead><tr>
+          <th style="text-align:left">SKU</th>
+          <th style="text-align:left">Description</th>
+          <th style="text-align:center">Qty</th>
+          <th style="text-align:right">Unit</th>
+          <th style="text-align:right">Total</th>
         </tr></thead>
-        <tbody>${o.items.map(i => `
-          <tr style="border-top:1px solid #2a2a2a;">
-            <td style="padding:5px 8px;color:#888;">${i.sku}</td>
-            <td style="padding:5px 8px;color:#eee;">${i.desc}</td>
-            <td style="padding:5px 8px;text-align:center;">${i.qty}</td>
-            <td style="padding:5px 8px;text-align:right;">$${i.unit.toFixed(2)}</td>
-            <td style="padding:5px 8px;text-align:right;color:#ff6a00;">$${i.total.toFixed(2)}</td>
+        <tbody>
+          ${o.items.map(i => `
+          <tr>
+            <td class="sku">${i.sku}</td>
+            <td class="desc">${i.desc}</td>
+            <td class="num" style="text-align:center">${i.qty}</td>
+            <td class="num">$${i.unit.toFixed(2)}</td>
+            <td class="price">$${i.total.toFixed(2)}</td>
           </tr>`).join('')}
         </tbody>
-        <tfoot><tr style="border-top:2px solid #333;">
-          <td colspan="4" style="padding:6px 8px;text-align:right;color:#888;font-weight:700;">ORDER TOTAL</td>
-          <td style="padding:6px 8px;text-align:right;color:#44cc77;font-weight:700;font-size:14px;">$${o.total.toFixed(2)}</td>
-        </tr></tfoot>
       </table>
-    </div>
-  `).join('');
+      <div class="wo-total">
+        <span class="wo-total-label">Order Total</span>$${o.total.toFixed(2)}
+      </div>
+    </div>`;
+  }).join('');
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -274,23 +736,12 @@ let tasks = {
   ]
 };
 
-// Load saved state
 const saved = localStorage.getItem('shopDashboard2');
-if (saved) {
-  try { tasks = JSON.parse(saved); } catch(e) {}
-}
+if (saved) { try { tasks = JSON.parse(saved); } catch(e) {} }
 
-function saveState() {
-  localStorage.setItem('shopDashboard2', JSON.stringify(tasks));
-}
-
-function statusKey(s) {
-  return s.toLowerCase().replace(/\s+/g, '-');
-}
-
-function genId() {
-  return 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2,5);
-}
+function saveState() { localStorage.setItem('shopDashboard2', JSON.stringify(tasks)); }
+function statusKey(s) { return s.toLowerCase().replace(/\s+/g, '-'); }
+function genId() { return 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2,5); }
 
 function findTask(id) {
   for (const section of Object.keys(tasks)) {
@@ -322,8 +773,7 @@ function deleteTask(id) {
   }
 }
 
-// Modal state
-let modalMode = 'add'; // 'add' or 'edit'
+let modalMode = 'add';
 let modalSection = '';
 let modalEditId = '';
 
@@ -349,30 +799,24 @@ function openEditModal(id) {
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-function closeModal() {
-  document.getElementById('modalOverlay').classList.remove('open');
-}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
 
 function saveModal() {
   const title = document.getElementById('modalTaskTitle').value.trim();
   if (!title) return;
   const day = document.getElementById('modalDay').value;
   const status = document.getElementById('modalStatus').value;
-
   if (modalMode === 'add') {
     tasks[modalSection].push({ id: genId(), title, day, status });
   } else {
     const { task } = findTask(modalEditId);
-    task.title = title;
-    task.day = day;
-    task.status = status;
+    task.title = title; task.day = day; task.status = status;
   }
   saveState();
   closeModal();
   renderAll();
 }
 
-// Close modal on overlay click
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
@@ -390,11 +834,8 @@ function importData(event) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
-    try {
-      tasks = JSON.parse(e.target.result);
-      saveState();
-      renderAll();
-    } catch(err) { alert('Invalid file'); }
+    try { tasks = JSON.parse(e.target.result); saveState(); renderAll(); }
+    catch(err) { alert('Invalid file'); }
   };
   reader.readAsText(file);
   event.target.value = '';
@@ -407,7 +848,7 @@ function renderTask(task) {
   card.innerHTML = `
     <div class="task-left">
       <div class="task-title">${task.title}</div>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+      <div class="task-meta">
         <span class="day-badge day-${task.day}">${task.day}</span>
       </div>
     </div>
@@ -416,8 +857,8 @@ function renderTask(task) {
         <select class="day-select" onchange="changeDay('${task.id}', this.value)">
           ${DAYS.map(d => `<option value="${d}" ${d === task.day ? 'selected' : ''}>${d}</option>`).join('')}
         </select>
-        <button class="icon-btn" title="Edit" onclick="openEditModal('${task.id}')">✏️</button>
-        <button class="icon-btn delete" title="Delete" onclick="deleteTask('${task.id}')">🗑️</button>
+        <button class="icon-btn" title="Edit" onclick="openEditModal('${task.id}')">✏</button>
+        <button class="icon-btn delete" title="Delete" onclick="deleteTask('${task.id}')">✕</button>
       </div>
       <div class="status-group">
         ${STATUSES.map(s => `<button class="status-btn ${statusKey(s) === sk ? 'active-' + statusKey(s) : ''}" onclick="changeStatus('${task.id}', '${s}')">${s}</button>`).join('')}
@@ -446,10 +887,10 @@ function updateStats() {
   document.getElementById('stat-ord').textContent = ord;
   document.getElementById('stat-ns').textContent = ns;
   document.getElementById('progressBar').innerHTML = `
-    <div class="progress-seg seg-done" style="width:${done/total*100}%"></div>
-    <div class="progress-seg seg-prog" style="width:${prog/total*100}%"></div>
-    <div class="progress-seg seg-ord" style="width:${ord/total*100}%"></div>
-    <div class="progress-seg seg-ns" style="width:${ns/total*100}%"></div>
+    <div class="pseg pseg-done" style="width:${done/total*100}%"></div>
+    <div class="pseg pseg-prog" style="width:${prog/total*100}%"></div>
+    <div class="pseg pseg-ord" style="width:${ord/total*100}%"></div>
+    <div class="pseg pseg-ns" style="width:${ns/total*100}%"></div>
   `;
 }
 
@@ -461,8 +902,116 @@ function renderAll() {
   updateStats();
 }
 
-document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+// ── Materials ─────────────────────────────────────────────────────────────────
+const MAT_KEY = 'hawg_materials';
+const MAT_STATUSES = ['Ordered', 'Shipped', 'In Stock'];
+const MAT_COLORS = { 'Ordered': '#FF6B00', 'Shipped': '#00D4FF', 'In Stock': '#00FF88' };
+
+function loadMaterials() {
+  try { return JSON.parse(localStorage.getItem(MAT_KEY) || '[]'); } catch { return []; }
+}
+function saveMaterials(m) { localStorage.setItem(MAT_KEY, JSON.stringify(m)); }
+
+// Seed with current orders if first load
+(function seedMaterials() {
+  const existing = loadMaterials();
+  if (existing.length === 0) {
+    const seed = [
+      { id: 'mat-1', name: 'Jockey Shifter Shafts (304SS)', qty: 60, supplier: 'China CNC', cost: '', status: 'Ordered', notes: 'Part of $1,275 order incl shift knobs' },
+      { id: 'mat-2', name: 'Shift Knobs (304SS)', qty: 60, supplier: 'China CNC', cost: '', status: 'Ordered', notes: 'Part of $1,275 order incl shifter shafts' },
+      { id: 'mat-3', name: 'Fuel Filters (for carb support brackets)', qty: 100, supplier: 'China CNC', cost: '', status: 'Ordered', notes: '' },
+    ];
+    saveMaterials(seed);
+  }
+})();
+
+function renderMaterials() {
+  const list = loadMaterials();
+  const container = document.getElementById('materials-list');
+  document.getElementById('materials-count').textContent = list.length;
+  if (!list.length) { container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;">No materials tracked yet.</div>'; return; }
+  container.innerHTML = list.map(m => {
+    const color = MAT_COLORS[m.status] || '#555';
+    return `
+    <div class="task-card" style="border-left-color:${color};">
+      <div class="task-left">
+        <div class="task-title">${m.name}</div>
+        <div class="task-meta" style="margin-top:6px;gap:10px;">
+          <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">QTY: <strong style="color:var(--text)">${m.qty}</strong></span>
+          ${m.supplier ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">FROM: <strong style="color:var(--text)">${m.supplier}</strong></span>` : ''}
+          ${m.cost ? `<span style="font-family:var(--mono);font-size:11px;color:var(--muted)">COST: <strong style="color:var(--orange)">${m.cost}</strong></span>` : ''}
+          ${m.notes ? `<span style="font-size:11px;color:var(--muted);font-style:italic">${m.notes}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-right">
+        <div class="task-actions">
+          <button class="icon-btn delete" onclick="deleteMaterial('${m.id}')">✕</button>
+        </div>
+        <div class="status-group">
+          ${MAT_STATUSES.map(s => {
+            const active = m.status === s;
+            const c = MAT_COLORS[s];
+            return `<button class="status-btn" onclick="setMaterialStatus('${m.id}','${s}')"
+              style="${active ? `border-color:${c};color:${c};background:${c}18;box-shadow:0 0 6px ${c}44;` : ''}">${s}</button>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setMaterialStatus(id, status) {
+  const list = loadMaterials();
+  const item = list.find(m => m.id === id);
+  if (item) { item.status = status; saveMaterials(list); renderMaterials(); }
+}
+
+function deleteMaterial(id) {
+  if (!confirm('Remove this material?')) return;
+  const list = loadMaterials().filter(m => m.id !== id);
+  saveMaterials(list);
+  renderMaterials();
+}
+
+// Material modal
+let matModalOpen = false;
+function openMaterialModal() {
+  document.getElementById('matModalOverlay').classList.add('open');
+}
+function closeMaterialModal() {
+  document.getElementById('matModalOverlay').classList.remove('open');
+  document.getElementById('matName').value = '';
+  document.getElementById('matQty').value = '';
+  document.getElementById('matSupplier').value = '';
+  document.getElementById('matCost').value = '';
+  document.getElementById('matNotes').value = '';
+  document.getElementById('matStatus').value = 'Ordered';
+}
+function saveMaterial() {
+  const name = document.getElementById('matName').value.trim();
+  if (!name) return;
+  const list = loadMaterials();
+  list.push({
+    id: 'mat-' + Date.now(),
+    name,
+    qty: document.getElementById('matQty').value || '—',
+    supplier: document.getElementById('matSupplier').value.trim(),
+    cost: document.getElementById('matCost').value.trim(),
+    status: document.getElementById('matStatus').value,
+    notes: document.getElementById('matNotes').value.trim(),
+  });
+  saveMaterials(list);
+  closeMaterialModal();
+  renderMaterials();
+}
+document.getElementById('matModalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeMaterialModal();
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
 renderAll();
+renderMaterials();
 </script>
 </body>
 </html>

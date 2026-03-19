@@ -107,14 +107,14 @@
 
   <!-- Debt Elimination -->
   <div class="card">
-    <h2>💳 Debt — Kill Plan</h2>
-    <div class="debt-item">
-      <div><div class="debt-label">Chase Credit Card</div><div class="debt-rate">27.24% APR</div></div>
-      <div style="text-align:right"><div class="red" style="font-weight:700">$5,687</div><div><span class="badge badge-kill">Pay Now</span></div></div>
+    <h2>💳 Debt Status</h2>
+    <div class="debt-item" style="opacity:0.4">
+      <div><div class="debt-label" style="text-decoration:line-through">Chase Credit Card</div><div class="debt-rate">27.24% APR</div></div>
+      <div style="text-align:right"><div style="text-decoration:line-through;color:#888;font-weight:700">$5,687</div><div><span class="badge badge-ok">✅ PAID OFF</span></div></div>
     </div>
-    <div class="debt-item">
-      <div><div class="debt-label">Apple Card</div><div class="debt-rate">28% APR</div></div>
-      <div style="text-align:right"><div class="red" style="font-weight:700">$2,796</div><div><span class="badge badge-kill">Pay Now</span></div></div>
+    <div class="debt-item" style="opacity:0.4">
+      <div><div class="debt-label" style="text-decoration:line-through">Apple Card</div><div class="debt-rate">28% APR</div></div>
+      <div style="text-align:right"><div style="text-decoration:line-through;color:#888;font-weight:700">$2,796</div><div><span class="badge badge-ok">✅ PAID OFF</span></div></div>
     </div>
     <div class="debt-item">
       <div><div class="debt-label">PayPal Card</div><div class="debt-rate">29% APR</div></div>
@@ -132,7 +132,8 @@
       <div><div class="debt-label">CNC Machine Loan</div><div class="debt-rate">8.8% APR · Asset</div></div>
       <div style="text-align:right"><div style="color:#888;font-weight:700">$24,600</div><div><span class="badge badge-ok">Keep</span></div></div>
     </div>
-    <div class="total-row"><span class="red">High-Interest Eliminated</span><span class="green">$15,882</span></div>
+    <div class="total-row"><span class="green">Paid Off So Far</span><span class="green">$8,483</span></div>
+    <div class="total-row" style="margin-top:6px"><span class="red">Remaining High-Interest</span><span class="red">$7,399</span></div>
   </div>
 
   <!-- Loan Allocation -->
@@ -206,12 +207,15 @@
   <h2>🗓️ Action Timeline</h2>
   <div class="timeline">
     <div class="phase">
-      <div class="phase-dot">1</div>
+      <div class="phase-dot" style="background:#44cc77">✓</div>
       <div class="phase-content">
-        <h3>This Week</h3>
+        <h3 style="color:#44cc77">Week 1 — Complete</h3>
         <ul>
-          <li>Pay off Chase ($5,687) + Apple Card ($2,796) with cash</li>
-          <li>Accept Shopify $30k loan</li>
+          <li>✅ Chase ($5,687) paid off</li>
+          <li>✅ Apple Card ($2,796) paid off</li>
+          <li>✅ $45k financing landed</li>
+          <li>✅ Ordered 60x shifter shafts + 60x shift knobs ($1,275)</li>
+          <li>✅ Ordered 100x fuel filters for carb support brackets ($250)</li>
           <li>Post CNC operator job (Indeed, Craigslist, trade schools)</li>
           <li>Place apparel order with Pakistan vendor (8-10 week lead time)</li>
           <li>Send RFQs to 3-5 Alibaba CNC shops for air cleaner covers</li>
@@ -256,6 +260,71 @@
         </ul>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Spending Tracker -->
+<div class="card" style="margin-bottom:20px">
+  <h2>💸 Capital Deployment Tracker</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;text-align:center">
+    <div style="background:#222;border-radius:8px;padding:14px">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Total Available</div>
+      <div style="font-size:24px;font-weight:700;color:#fff">$45,000</div>
+    </div>
+    <div style="background:#222;border-radius:8px;padding:14px">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Deployed</div>
+      <div style="font-size:24px;font-weight:700;color:#ff6a00">$10,008</div>
+    </div>
+    <div style="background:#222;border-radius:8px;padding:14px">
+      <div style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Remaining</div>
+      <div style="font-size:24px;font-weight:700;color:#44cc77">$34,992</div>
+    </div>
+  </div>
+  <div style="background:#222;border-radius:4px;height:8px;margin-bottom:20px;overflow:hidden">
+    <div style="height:8px;width:22%;background:linear-gradient(90deg,#ff6a00,#ff9900);border-radius:4px"></div>
+  </div>
+
+  <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Transactions</div>
+
+  <!-- Debt Payoffs -->
+  <div class="alloc-item">
+    <div class="alloc-left">
+      <div class="alloc-name">✅ Chase CC Payoff</div>
+      <div style="font-size:11px;color:#666;margin-top:2px">Mar 19, 2026 · Debt elimination · 27.24% APR gone</div>
+    </div>
+    <div class="alloc-amount red">−$5,687</div>
+  </div>
+  <div class="alloc-item">
+    <div class="alloc-left">
+      <div class="alloc-name">✅ Apple Card Payoff</div>
+      <div style="font-size:11px;color:#666;margin-top:2px">Mar 18, 2026 · Debt elimination · 28% APR gone</div>
+    </div>
+    <div class="alloc-amount red">−$2,796</div>
+  </div>
+
+  <!-- Inventory -->
+  <div class="alloc-item">
+    <div class="alloc-left">
+      <div class="alloc-name">🔩 Jockey Shifter Shafts + Shift Knobs (60 ea)</div>
+      <div style="font-size:11px;color:#666;margin-top:2px">Mar 19, 2026 · China CNC · 304SS · ETA ~5-6 weeks</div>
+    </div>
+    <div class="alloc-amount orange">−$1,275</div>
+  </div>
+  <div class="alloc-item">
+    <div class="alloc-left">
+      <div class="alloc-name">⛽ Fuel Filters (100 units — carb support brackets)</div>
+      <div style="font-size:11px;color:#666;margin-top:2px">Mar 19, 2026 · China · For carb support bracket kit</div>
+    </div>
+    <div class="alloc-amount orange">−$250</div>
+  </div>
+
+  <div class="total-row" style="margin-top:14px">
+    <span style="color:#aaa">Total Spent</span>
+    <span class="red">−$10,008</span>
+  </div>
+  <div class="total-row" style="margin-top:6px">
+    <span style="color:#aaa">Remaining</span>
+    <span class="green">$34,992</span>
   </div>
 </div>
 
