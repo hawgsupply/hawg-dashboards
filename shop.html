@@ -7,23 +7,8 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: #111; color: #eee; font-family: 'Segoe UI', sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
-
-  /* Password gate */
-  #gate { position: fixed; inset: 0; background: #111; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-  #gate h2 { color: #ff6a00; font-size: 22px; letter-spacing: 2px; text-transform: uppercase; }
-  #gate .skull { font-size: 60px; }
-  #gate input { background: #1a1a1a; border: 1px solid #333; color: #eee; font-size: 18px; padding: 12px 20px; border-radius: 8px; text-align: center; letter-spacing: 4px; width: 280px; }
-  #gate input:focus { outline: none; border-color: #ff6a00; }
-  #gate button { background: #ff6a00; color: #000; font-weight: 700; font-size: 14px; padding: 10px 28px; border: none; border-radius: 8px; cursor: pointer; letter-spacing: 1px; text-transform: uppercase; }
-  #gate button:hover { background: #ff8833; }
-  #gate .err { color: #ff4444; font-size: 13px; display: none; }
-  #gate .hint { color: #444; font-size: 12px; }
   h1 { color: #ff6a00; font-size: 26px; margin-bottom: 4px; }
   .subtitle { color: #666; font-size: 13px; margin-bottom: 20px; }
-  .sync-status { font-size: 11px; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-left: 10px; vertical-align: middle; }
-  .sync-ok { background: #0a2a0a; color: #44cc77; border: 1px solid #2a6a2a; }
-  .sync-saving { background: #2a2a00; color: #ffcc44; border: 1px solid #6a6a00; }
-  .sync-err { background: #2a0000; color: #ff4444; border: 1px solid #6a0000; }
 
   .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
   .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -32,6 +17,8 @@
   .btn-orange:hover { background: #ff8833; }
   .btn-ghost { background: #222; color: #aaa; border: 1px solid #333; }
   .btn-ghost:hover { border-color: #555; color: #eee; }
+  .btn-danger { background: #3a0000; color: #ff4444; border: 1px solid #660000; }
+  .btn-danger:hover { background: #550000; }
 
   .stats-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
   .stat-pill { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; min-width: 70px; }
@@ -80,6 +67,7 @@
   .status-btn.active-ordered { background: #001a3a; border-color: #4488ff; color: #4488ff; }
   .status-btn.active-done { background: #0a2a0a; border-color: #44cc77; color: #44cc77; }
 
+  /* Modal */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
   .modal-overlay.open { display: flex; }
   .modal { background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 24px; width: 480px; max-width: 95vw; }
@@ -106,7 +94,7 @@
 
 <div class="top-bar">
   <div>
-    <h1>🐗 Shop Dashboard <span class="sync-status sync-saving" id="syncStatus">Connecting...</span></h1>
+    <h1>🐗 Shop Dashboard</h1>
     <p class="subtitle" id="dateDisplay"></p>
   </div>
   <div class="top-actions">
@@ -124,6 +112,7 @@
 </div>
 <div class="progress-bar-wrap" id="progressBar"></div>
 
+<!-- MACHINING -->
 <div class="section">
   <div class="section-header">
     <div class="section-title">⚙️ Machining Tasks <span id="machining-count">0</span></div>
@@ -132,6 +121,7 @@
   <div id="machining-tasks"></div>
 </div>
 
+<!-- BIKE / FAB -->
 <div class="section">
   <div class="section-header">
     <div class="section-title">🔧 Bike & Fabrication <span id="bike-count">0</span></div>
@@ -140,6 +130,7 @@
   <div id="bike-tasks"></div>
 </div>
 
+<!-- DESIGN -->
 <div class="section">
   <div class="section-header">
     <div class="section-title">✏️ Design Tasks <span id="design-count">0</span></div>
@@ -148,6 +139,15 @@
   <div id="design-tasks"></div>
 </div>
 
+<!-- WHOLESALE ORDERS -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-title">📦 Wholesale Orders <span id="wholesale-count">0</span></div>
+  </div>
+  <div id="wholesale-orders-list"></div>
+</div>
+
+<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h2 id="modalTitle">Add Task</h2>
@@ -176,64 +176,80 @@
   </div>
 </div>
 
-<!-- Password Gate -->
-<div id="gate">
-  <div class="skull">💀</div>
-  <h2>Choppers Only</h2>
-  <input type="password" id="gateInput" placeholder="••••••••" onkeydown="if(event.key==='Enter') checkPass()" autofocus>
-  <button onclick="checkPass()">Enter</button>
-  <div class="err" id="gateErr">Wrong password, poser.</div>
-  <div class="hint">Hawg Supply internal use only</div>
-</div>
-
 <script>
-const PASS_HASH = '7a9e3f2b1d4c8e6a0f5b2d9c3a7e1f4b'; // md5 of "choppers"
+const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const STATUSES = ['Not Started','In Progress','Ordered','Done'];
+const SECTIONS = { machining: 'machining', bike: 'bike', design: 'design' };
 
-async function hashStr(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-
-async function checkPass() {
-  const val = document.getElementById('gateInput').value;
-  const hash = await hashStr(val);
-  // Check against sha256 of "choppers"
-  const correct = await hashStr('choppers');
-  if (hash === correct) {
-    document.getElementById('gate').style.display = 'none';
-    localStorage.setItem('hawg_auth', '1');
-  } else {
-    document.getElementById('gateErr').style.display = 'block';
-    document.getElementById('gateInput').value = '';
-    document.getElementById('gateInput').focus();
+// ── Wholesale Orders ──────────────────────────────────────────────────────────
+const wholesaleOrders = [
+  {
+    po: "57994",
+    date: "2026-03-18",
+    ship_by: "2026-03-25",
+    customer: "Lowbrow Customs",
+    contact: "Katy Medvetz",
+    email: "katy@lowbrowcustoms.com",
+    status: "pending",
+    items: [
+      { sku: "015701", desc: "Ratchet Top Shifter - Straight Arm", qty: 2, unit: 76.99, total: 153.98 },
+      { sku: "015709", desc: "Denim Tool Roll", qty: 2, unit: 52.49, total: 104.98 }
+    ],
+    total: 258.96,
+    terms: "Net 30"
   }
+];
+
+function renderWholesale() {
+  const container = document.getElementById('wholesale-orders-list');
+  const badge = document.getElementById('wholesale-count');
+  badge.textContent = wholesaleOrders.length;
+  const statusColors = { pending: '#ff9900', shipped: '#4488ff', invoiced: '#aa44ff', done: '#44cc77' };
+  container.innerHTML = wholesaleOrders.map(o => `
+    <div class="task-card" style="flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div>
+          <span style="color:#ff6a00;font-weight:700;font-size:15px;">PO #${o.po}</span>
+          <span style="color:#888;font-size:12px;margin-left:10px;">${o.date}</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span style="font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid ${statusColors[o.status]||'#555'};color:${statusColors[o.status]||'#aaa'};background:${statusColors[o.status]||'#555'}22;text-transform:uppercase;">${o.status}</span>
+          <span style="font-size:12px;color:#888;">Ship by: <strong style="color:#eee;">${o.ship_by}</strong></span>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;font-size:12px;color:#aaa;flex-wrap:wrap;">
+        <span>👤 ${o.customer} — ${o.contact}</span>
+        <span>📧 ${o.email}</span>
+        <span>💳 ${o.terms}</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;">
+        <thead><tr style="color:#666;text-transform:uppercase;letter-spacing:0.5px;">
+          <th style="text-align:left;padding:4px 8px;">SKU</th>
+          <th style="text-align:left;padding:4px 8px;">Description</th>
+          <th style="text-align:center;padding:4px 8px;">Qty</th>
+          <th style="text-align:right;padding:4px 8px;">Unit</th>
+          <th style="text-align:right;padding:4px 8px;">Total</th>
+        </tr></thead>
+        <tbody>${o.items.map(i => `
+          <tr style="border-top:1px solid #2a2a2a;">
+            <td style="padding:5px 8px;color:#888;">${i.sku}</td>
+            <td style="padding:5px 8px;color:#eee;">${i.desc}</td>
+            <td style="padding:5px 8px;text-align:center;">${i.qty}</td>
+            <td style="padding:5px 8px;text-align:right;">$${i.unit.toFixed(2)}</td>
+            <td style="padding:5px 8px;text-align:right;color:#ff6a00;">$${i.total.toFixed(2)}</td>
+          </tr>`).join('')}
+        </tbody>
+        <tfoot><tr style="border-top:2px solid #333;">
+          <td colspan="4" style="padding:6px 8px;text-align:right;color:#888;font-weight:700;">ORDER TOTAL</td>
+          <td style="padding:6px 8px;text-align:right;color:#44cc77;font-weight:700;font-size:14px;">$${o.total.toFixed(2)}</td>
+        </tr></tfoot>
+      </table>
+    </div>
+  `).join('');
 }
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Auto-unlock if already authed this session
-if (localStorage.getItem('hawg_auth') === '1') {
-  document.getElementById('gate').style.display = 'none';
-}
-</script>
-
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDAunyLD6pVRC9CiVTWthxzLJ8eZVFfEjw",
-  authDomain: "hawg-supply.firebaseapp.com",
-  projectId: "hawg-supply",
-  storageBucket: "hawg-supply.firebasestorage.app",
-  messagingSenderId: "573861121859",
-  appId: "1:573861121859:web:9d3e74192dfbae0bb4e9f6"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const docRef = doc(db, 'dashboards', 'shop-tasks');
-
-const DEFAULT_TASKS = {
+let tasks = {
   machining: [
     { id: 'm1', title: 'Op2 for carb supports', day: 'Mon', status: 'Not Started' },
     { id: 'm2', title: 'Brembo adapter plates', day: 'Mon', status: 'Not Started' },
@@ -258,52 +274,23 @@ const DEFAULT_TASKS = {
   ]
 };
 
-const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-const STATUSES = ['Not Started','In Progress','Ordered','Done'];
-
-let tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
-let isSyncing = false;
-
-function setSyncStatus(state) {
-  const el = document.getElementById('syncStatus');
-  if (state === 'ok') { el.textContent = '● Synced'; el.className = 'sync-status sync-ok'; }
-  else if (state === 'saving') { el.textContent = '● Saving...'; el.className = 'sync-status sync-saving'; }
-  else { el.textContent = '● Offline'; el.className = 'sync-status sync-err'; }
+// Load saved state
+const saved = localStorage.getItem('shopDashboard2');
+if (saved) {
+  try { tasks = JSON.parse(saved); } catch(e) {}
 }
 
-async function saveToFirebase() {
-  setSyncStatus('saving');
-  try {
-    await setDoc(docRef, { tasks, updatedAt: new Date().toISOString() });
-    setSyncStatus('ok');
-  } catch(e) {
-    console.error(e);
-    setSyncStatus('err');
-  }
+function saveState() {
+  localStorage.setItem('shopDashboard2', JSON.stringify(tasks));
 }
 
-// Listen for real-time updates
-onSnapshot(docRef, (snap) => {
-  if (snap.exists()) {
-    const data = snap.data();
-    if (data.tasks) {
-      isSyncing = true;
-      tasks = data.tasks;
-      renderAll();
-      isSyncing = false;
-    }
-  } else {
-    // First time — push defaults
-    saveToFirebase();
-  }
-  setSyncStatus('ok');
-}, (err) => {
-  console.error(err);
-  setSyncStatus('err');
-});
+function statusKey(s) {
+  return s.toLowerCase().replace(/\s+/g, '-');
+}
 
-function statusKey(s) { return s.toLowerCase().replace(/\s+/g, '-'); }
-function genId() { return 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2,5); }
+function genId() {
+  return 'task-' + Date.now() + '-' + Math.random().toString(36).substr(2,5);
+}
 
 function findTask(id) {
   for (const section of Object.keys(tasks)) {
@@ -312,96 +299,106 @@ function findTask(id) {
   }
 }
 
-window.changeStatus = function(id, status) {
+function changeStatus(id, status) {
   const { task } = findTask(id);
   task.status = status;
-  saveToFirebase();
+  saveState();
   renderAll();
-};
+}
 
-window.changeDay = function(id, day) {
+function changeDay(id, day) {
   const { task } = findTask(id);
   task.day = day;
-  saveToFirebase();
+  saveState();
   renderAll();
-};
+}
 
-window.deleteTask = function(id) {
+function deleteTask(id) {
   const { section, idx } = findTask(id);
   if (confirm('Delete this task?')) {
     tasks[section].splice(idx, 1);
-    saveToFirebase();
+    saveState();
     renderAll();
   }
-};
+}
 
-let modalMode = 'add', modalSection = '', modalEditId = '';
+// Modal state
+let modalMode = 'add'; // 'add' or 'edit'
+let modalSection = '';
+let modalEditId = '';
 
-window.openAddModal = function(section) {
-  modalMode = 'add'; modalSection = section;
+function openAddModal(section) {
+  modalMode = 'add';
+  modalSection = section;
   document.getElementById('modalTitle').textContent = 'Add Task';
   document.getElementById('modalTaskTitle').value = '';
   document.getElementById('modalDay').value = 'Mon';
   document.getElementById('modalStatus').value = 'Not Started';
   document.getElementById('modalOverlay').classList.add('open');
-};
+}
 
-window.openEditModal = function(id) {
+function openEditModal(id) {
   const { task, section } = findTask(id);
-  modalMode = 'edit'; modalSection = section; modalEditId = id;
+  modalMode = 'edit';
+  modalSection = section;
+  modalEditId = id;
   document.getElementById('modalTitle').textContent = 'Edit Task';
   document.getElementById('modalTaskTitle').value = task.title;
   document.getElementById('modalDay').value = task.day;
   document.getElementById('modalStatus').value = task.status;
   document.getElementById('modalOverlay').classList.add('open');
-};
+}
 
-window.closeModal = function() {
+function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
-};
+}
 
-window.saveModal = function() {
+function saveModal() {
   const title = document.getElementById('modalTaskTitle').value.trim();
   if (!title) return;
   const day = document.getElementById('modalDay').value;
   const status = document.getElementById('modalStatus').value;
+
   if (modalMode === 'add') {
     tasks[modalSection].push({ id: genId(), title, day, status });
   } else {
     const { task } = findTask(modalEditId);
-    task.title = title; task.day = day; task.status = status;
+    task.title = title;
+    task.day = day;
+    task.status = status;
   }
-  saveToFirebase();
+  saveState();
   closeModal();
   renderAll();
-};
+}
 
+// Close modal on overlay click
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-window.exportData = function() {
+function exportData() {
   const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'shop-tasks-' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
-};
+}
 
-window.importData = function(event) {
+function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
       tasks = JSON.parse(e.target.result);
-      saveToFirebase();
+      saveState();
       renderAll();
     } catch(err) { alert('Invalid file'); }
   };
   reader.readAsText(file);
   event.target.value = '';
-};
+}
 
 function renderTask(task) {
   const sk = statusKey(task.status);
@@ -410,7 +407,9 @@ function renderTask(task) {
   card.innerHTML = `
     <div class="task-left">
       <div class="task-title">${task.title}</div>
-      <div style="margin-top:4px"><span class="day-badge day-${task.day}">${task.day}</span></div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+        <span class="day-badge day-${task.day}">${task.day}</span>
+      </div>
     </div>
     <div class="task-right">
       <div class="task-actions">
@@ -454,12 +453,13 @@ function updateStats() {
   `;
 }
 
-window.renderAll = function() {
+function renderAll() {
   renderSection('machining-tasks', tasks.machining, 'machining-count');
   renderSection('bike-tasks', tasks.bike, 'bike-count');
   renderSection('design-tasks', tasks.design, 'design-count');
+  renderWholesale();
   updateStats();
-};
+}
 
 document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 renderAll();
