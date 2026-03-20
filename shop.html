@@ -790,6 +790,7 @@ function deleteTask(id) {
   if (confirm('Delete this task?')) {
     tasks[section].splice(idx, 1);
     saveState();
+    sbDelete('tasks', id);
     renderAll();
   }
 }
@@ -1030,62 +1031,64 @@ document.getElementById('matModalOverlay').addEventListener('click', function(e)
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Supabase Sync ─────────────────────────────────────────────────────────────
+// ── Supabase ──────────────────────────────────────────────────────────────────
 const SB_URL = 'https://yvuqgqjutljxmihuumwv.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2dXFncWp1dGxqeG1paHV1bXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Nzg3NzEsImV4cCI6MjA4OTU1NDc3MX0.e1AdT57XdNRKe5iyE6Fn2Fo105O2TgBLGIvGHIMQl5Q';
+const SB_H = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' };
 
-async function sbFetch(method, table, data, query='') {
-  try {
-    const res = await fetch(`${SB_URL}/rest/v1/${table}${query}`, {
-      method,
-      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: data ? JSON.stringify(data) : undefined
-    });
-    if (!res.ok) return null;
-    const text = await res.text();
-    return text ? JSON.parse(text) : [];
-  } catch { return null; }
+function sbPush(table, data) {
+  if (!data || !data.length) return;
+  fetch(`${SB_URL}/rest/v1/${table}`, { method: 'POST', headers: SB_H, body: JSON.stringify(data) }).catch(() => {});
 }
 
-function pushTasksToSB() {
-  const all = [];
-  Object.keys(tasks).forEach(sec => tasks[sec].forEach(t => all.push({...t, section: sec})));
-  if (all.length) sbFetch('POST', 'tasks', all);
+function sbDelete(table, id) {
+  fetch(`${SB_URL}/rest/v1/${table}?id=eq.${id}`, { method: 'DELETE', headers: SB_H }).catch(() => {});
 }
 
-function pushMatsToSB() {
-  const list = loadMaterials();
-  if (list.length) sbFetch('POST', 'inventory', list);
-}
-
-// Step 1: render immediately with localStorage/defaults so page is never blank
+// Render page immediately with hardcoded defaults (guaranteed visible)
 document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
 renderAll();
 renderMaterials();
 
-// Step 2: load from Supabase in background and update if data exists
+// Then load Supabase in background — overwrite only if data returned
 (async () => {
-  const [sbTasks, sbInv] = await Promise.all([
-    sbFetch('GET', 'tasks', null, '?order=created_at.asc'),
-    sbFetch('GET', 'inventory', null, '?order=created_at.asc')
-  ]);
-  let changed = false;
-  if (sbTasks && sbTasks.length > 0) {
-    const sections = { machining: [], bike: [], design: [] };
-    sbTasks.forEach(t => { if (sections[t.section]) sections[t.section].push(t); });
-    if (Object.values(sections).some(s => s.length)) { tasks = sections; localStorage.setItem('shopDashboard2', JSON.stringify(tasks)); changed = true; }
-  }
-  if (sbInv && sbInv.length > 0) {
-    localStorage.setItem(MAT_KEY, JSON.stringify(sbInv)); changed = true;
-  }
-  if (changed) { renderAll(); renderMaterials(); }
+  try {
+    const [rt, ri] = await Promise.all([
+      fetch(`${SB_URL}/rest/v1/tasks?order=created_at.asc`, { headers: SB_H }),
+      fetch(`${SB_URL}/rest/v1/inventory?order=created_at.asc`, { headers: SB_H })
+    ]);
+    const sbTasks = rt.ok ? await rt.json() : [];
+    const sbInv   = ri.ok ? await ri.json() : [];
+
+    let changed = false;
+
+    if (sbTasks.length > 0) {
+      const s = { machining: [], bike: [], design: [] };
+      sbTasks.forEach(t => { if (s[t.section]) s[t.section].push(t); });
+      if (Object.values(s).some(a => a.length)) { tasks = s; changed = true; }
+    }
+    if (sbInv.length > 0) {
+      localStorage.setItem(MAT_KEY, JSON.stringify(sbInv));
+      changed = true;
+    }
+    if (changed) { renderAll(); renderMaterials(); }
+  } catch(e) { console.warn('SB load failed:', e); }
 })();
 
-// Step 3: push saves to Supabase (non-blocking, after local save)
-const _ss = saveState;
-function saveState() { _ss(); pushTasksToSB(); }
-const _sm = saveMaterials;
-function saveMaterials(m) { _sm(m); pushMatsToSB(); }
+// Patch saveState & saveMaterials to also push to Supabase
+const _saveState0 = saveState;
+saveState = function() {
+  _saveState0();
+  const all = [];
+  Object.keys(tasks).forEach(sec => tasks[sec].forEach(t => all.push({...t, section: sec})));
+  sbPush('tasks', all);
+};
+
+const _saveMaterials0 = saveMaterials;
+saveMaterials = function(m) {
+  _saveMaterials0(m);
+  sbPush('inventory', m);
+};
 // ─────────────────────────────────────────────────────────────────────────────
 </script>
 </body>
