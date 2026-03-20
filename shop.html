@@ -1024,9 +1024,63 @@ document.getElementById('matModalOverlay').addEventListener('click', function(e)
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Supabase Sync ─────────────────────────────────────────────────────────────
+const SB_URL = 'https://yvuqgqjutljxmihuumwv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2dXFncWp1dGxqeG1paHV1bXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5Nzg3NzEsImV4cCI6MjA4OTU1NDc3MX0.e1AdT57XdNRKe5iyE6Fn2Fo105O2TgBLGIvGHIMQl5Q';
+
+async function sbFetch(method, table, data, query='') {
+  try {
+    const res = await fetch(`${SB_URL}/rest/v1/${table}${query}`, {
+      method,
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: data ? JSON.stringify(data) : undefined
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : [];
+  } catch { return null; }
+}
+
+function pushTasksToSB() {
+  const all = [];
+  Object.keys(tasks).forEach(sec => tasks[sec].forEach(t => all.push({...t, section: sec})));
+  if (all.length) sbFetch('POST', 'tasks', all);
+}
+
+function pushMatsToSB() {
+  const list = loadMaterials();
+  if (list.length) sbFetch('POST', 'inventory', list);
+}
+
+// Step 1: render immediately with localStorage/defaults so page is never blank
 document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
 renderAll();
 renderMaterials();
+
+// Step 2: load from Supabase in background and update if data exists
+(async () => {
+  const [sbTasks, sbInv] = await Promise.all([
+    sbFetch('GET', 'tasks', null, '?order=created_at.asc'),
+    sbFetch('GET', 'inventory', null, '?order=created_at.asc')
+  ]);
+  let changed = false;
+  if (sbTasks && sbTasks.length > 0) {
+    const sections = { machining: [], bike: [], design: [] };
+    sbTasks.forEach(t => { if (sections[t.section]) sections[t.section].push(t); });
+    if (Object.values(sections).some(s => s.length)) { tasks = sections; localStorage.setItem('shopDashboard2', JSON.stringify(tasks)); changed = true; }
+  }
+  if (sbInv && sbInv.length > 0) {
+    localStorage.setItem(MAT_KEY, JSON.stringify(sbInv)); changed = true;
+  }
+  if (changed) { renderAll(); renderMaterials(); }
+})();
+
+// Step 3: push saves to Supabase (non-blocking, after local save)
+const _ss = saveState;
+function saveState() { _ss(); pushTasksToSB(); }
+const _sm = saveMaterials;
+function saveMaterials(m) { _sm(m); pushMatsToSB(); }
+// ─────────────────────────────────────────────────────────────────────────────
 </script>
 </body>
 </html>
