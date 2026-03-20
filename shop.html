@@ -1059,20 +1059,25 @@ async function syncMatsToSB() {
 }
 
 async function loadFromSB() {
-  const [sbTasks, sbInv] = await Promise.all([
-    sbFetch('GET', 'tasks', null, '?order=created_at.asc'),
-    sbFetch('GET', 'inventory', null, '?order=created_at.asc')
-  ]);
-  if (sbTasks && sbTasks.length) {
-    const sections = { machining: [], bike: [], design: [] };
-    sbTasks.forEach(t => { if (sections[t.section]) sections[t.section].push(t); });
-    if (Object.values(sections).some(s => s.length)) {
-      tasks = sections;
-      saveState();
+  try {
+    const [sbTasks, sbInv] = await Promise.all([
+      sbFetch('GET', 'tasks', null, '?order=created_at.asc'),
+      sbFetch('GET', 'inventory', null, '?order=created_at.asc')
+    ]);
+    // Only update if Supabase actually returned data — never wipe with empty
+    if (sbTasks && sbTasks.length > 0) {
+      const sections = { machining: [], bike: [], design: [] };
+      sbTasks.forEach(t => { if (sections[t.section]) sections[t.section].push(t); });
+      if (Object.values(sections).some(s => s.length)) {
+        tasks = sections;
+        localStorage.setItem('shopDashboard2', JSON.stringify(tasks));
+      }
     }
-  }
-  if (sbInv && sbInv.length) {
-    saveMaterials(sbInv);
+    if (sbInv && sbInv.length > 0) {
+      localStorage.setItem(MAT_KEY, JSON.stringify(sbInv));
+    }
+  } catch(e) {
+    console.warn('Supabase load failed, using localStorage:', e);
   }
 }
 
