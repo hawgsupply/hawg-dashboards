@@ -752,7 +752,13 @@ let tasks = {
 };
 
 const saved = localStorage.getItem('shopDashboard2');
-if (saved) { try { tasks = JSON.parse(saved); } catch(e) {} }
+if (saved) {
+  try {
+    const parsed = JSON.parse(saved);
+    const total = Object.values(parsed).reduce((n, arr) => n + (Array.isArray(arr) ? arr.length : 0), 0);
+    if (total > 0) tasks = parsed; // only use saved if it has actual tasks
+  } catch(e) {}
+}
 
 function saveState() { localStorage.setItem('shopDashboard2', JSON.stringify(tasks)); }
 function statusKey(s) { return s.toLowerCase().replace(/\s+/g, '-'); }
